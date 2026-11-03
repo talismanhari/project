@@ -275,7 +275,7 @@ export const Core1MathSummaryBar: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#1E293B]/60 text-gray-300">
-                    {telemetryData.quantization_records.map((r, idx) => (
+                    {telemetryData.quantization_records?.map((r, idx) => (
                       <tr key={r.name} className="hover:bg-[#151D2A]">
                         <td className="py-1 px-2 text-gray-500">[{idx.toString().padStart(2, '0')}]</td>
                         <td className="py-1 px-2 font-bold text-gray-200 truncate max-w-[120px]">

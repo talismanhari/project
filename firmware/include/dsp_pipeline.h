@@ -31,15 +31,17 @@
 // Sampling buffer dimensions (1.00s window @ 3200 Hz)
 #define SAMPLES_PER_SEC 3200
 #define FFT_POINTS      1024
-#define DECIMATED_PTS   800
-#define NUM_FEATURES    20
+#define DECIMATED_PTS   100
+#define NUM_DSP_FEATURES 12
 
 // Inter-Core FreeRTOS Message Payload (Core 0 DSP -> Core 1 TinyML)
 struct DSPPayload {
     uint32_t window_idx;
     uint32_t timestamp_ms;
-    float features[NUM_FEATURES];
-    float raw_preview[DECIMATED_PTS]; // 800-sample decimation for live MQTT/Cloud uplink
+    bool is_physical;
+    float features[NUM_DSP_FEATURES];
+    int8_t int8_features[NUM_DSP_FEATURES];
+    float raw_preview[DECIMATED_PTS]; // 100-sample raw buffer for telemetry
     float rms_x;
     float peak_to_peak;
     float dominant_freq;
@@ -48,7 +50,6 @@ struct DSPPayload {
 
 // Fast in-place Radix-2 Cooley-Tukey FFT (1024-pt)
 inline void radix2_fft(float* real, float* imag, int n) {
-    // Bit-reversal permutation
     int j = 0;
     for (int i = 0; i < n - 1; i++) {
         if (i < j) {
@@ -63,7 +64,6 @@ inline void radix2_fft(float* real, float* imag, int n) {
         j += k;
     }
 
-    // Butterfly computations
     for (int len = 2; len <= n; len <<= 1) {
         float angle = -2.0f * (float)M_PI / (float)len;
         float wlen_r = cosf(angle);
@@ -95,8 +95,8 @@ inline void radix2_fft(float* real, float* imag, int n) {
     }
 }
 
-// Band power integration (dB)
-inline float integrate_band_db(const float* psd, float f_res, float f_min, float f_max, int n_bins) {
+// Band power integration (linear sum)
+inline float integrate_band_linear(const float* psd, float f_res, float f_min, float f_max, int n_bins) {
     int i_min = (int)(f_min / f_res);
     int i_max = (int)(f_max / f_res);
     if (i_min < 0) i_min = 0;
@@ -106,6 +106,5 @@ inline float integrate_band_db(const float* psd, float f_res, float f_min, float
     for (int i = i_min; i <= i_max; i++) {
         sum_p += psd[i];
     }
-    if (sum_p < 1e-12f) sum_p = 1e-12f;
-    return 10.0f * log10f(sum_p);
+    return sum_p;
 }

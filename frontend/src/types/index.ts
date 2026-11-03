@@ -1,3 +1,30 @@
+export interface HardwareStatus {
+  is_physical: boolean;
+  mode_label: string;
+}
+
+export interface Int8Features {
+  names: string[];
+  float_vals: number[];
+  int8_vals: number[];
+}
+
+export interface DecisionPayload {
+  action: 'EDGE' | 'CLOUD' | 'EDGE_FAILSAFE';
+  risk_score: number;
+  threshold: number;
+  predicted_class: string;
+  confidence: number;
+  defer_to_cloud?: boolean;
+}
+
+export interface CloudVerdict {
+  status: string;
+  gpu_device: string;
+  latency_ms?: number;
+  confirmed_fault?: string;
+}
+
 export interface QuantizationRecord {
   name: string;
   label: string;
@@ -25,17 +52,28 @@ export interface TelemetryPayload {
   timestamp_s?: number;
   time_raw_s?: number[];
   sig_raw_g?: number[];
-  time_down_s: number[];
-  sig_down_g: number[];
-  fft_freqs: number[];
-  fft_psd_db: number[];
-  stft_times: number[];
-  stft_freqs: number[];
-  stft_zxx_db: number[][];
-  features_fp32: number[];
-  quantization_records: QuantizationRecord[];
-  raw_logits: number[];
-  ina219_trace: Ina219Trace;
+  time_down_s?: number[];
+  sig_down_g?: number[];
+  raw_waveform?: number[];
+  fft_freqs?: number[];
+  fft_psd_db?: number[];
+  stft_times?: number[];
+  stft_freqs?: number[];
+  stft_zxx_db?: number[][];
+  features_fp32?: number[];
+  quantization_records?: QuantizationRecord[];
+  raw_logits?: number[];
+  ina219_trace?: Ina219Trace;
+  hardware_status?: HardwareStatus;
+  int8_features?: Int8Features;
+  decision?: DecisionPayload;
+  cloud_verdict?: CloudVerdict;
+  min_risk?: number;
+  spectrogram?: {
+    z: number[][];
+    times: number[];
+    freqs: number[];
+  } | null;
   telemetry?: {
     times_ms: number[];
     accel_x: number[];
@@ -54,11 +92,6 @@ export interface TelemetryPayload {
     cumulative_baseline_j: number;
     saved_percent: number;
   };
-  spectrogram?: {
-    z: number[][];
-    times: number[];
-    freqs: number[];
-  };
   risk?: {
     score: number;
     deferred: boolean;
@@ -69,7 +102,7 @@ export interface TelemetryPayload {
     hypothesis: string;
     expected_risks: number[];
   };
-  model_metrics: {
+  model_metrics?: {
     model_architecture: string;
     train_accuracy_pct: number;
     test_accuracy_pct: number;
@@ -86,8 +119,8 @@ export interface InferenceCycleLog {
   decision: 'KEEP_LOCAL' | 'OFFLOAD_CLOUD' | 'FAILSAFE_LOCAL';
   minRisk: number;
   threshold: number;
-  tinyDeferEnergy: number; // Instantaneous cycle energy (mJ)
-  baselineEnergy: number;  // Kumar 2026 stochastic cycle energy (mJ)
+  tinyDeferEnergy: number;
+  baselineEnergy: number;
   cumulativeTinyDefer: number;
   cumulativeBaseline: number;
   isFailSafeActive?: boolean;

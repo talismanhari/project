@@ -4,9 +4,9 @@ import { fetchStreamingWindow, incrementTick } from './store/telemetrySlice';
 import { recordStreamingTick } from './store/energySlice';
 import { Header } from './components/Header';
 import { OperatingSwitchBar } from './components/OperatingSwitchBar';
-import { Plot1Oscilloscopes } from './components/Plot1Oscilloscopes';
-import { Plot2CloudAndEnergy } from './components/Plot2CloudAndEnergy';
-import { Core1MathSummaryBar } from './components/Core1MathSummaryBar';
+import { PanelASensorInput } from './components/PanelASensorInput';
+import { PanelBDecisionHighway } from './components/PanelBDecisionHighway';
+import { PanelCCloudDeepDive } from './components/PanelCCloudDeepDive';
 import { BackendCrashOverlay } from './components/BackendCrashOverlay';
 import {
   computeCalibratedProbabilities,
@@ -68,7 +68,8 @@ export const App: React.FC = () => {
 
     if (fetchStreamingWindow.fulfilled.match(action)) {
       const data = action.payload;
-      const cal = computeCalibratedProbabilities(data.raw_logits, temp);
+      const logits = data.raw_logits || [0, 0, 0, 0, 0, 0, 0, 0];
+      const cal = computeCalibratedProbabilities(logits, temp);
       const risk = computeExpectedRiskVector(cal.calibratedProbabilities, ASYMMETRIC_COST_MATRIX);
       const gate = evaluateDeferralDecision(risk.minRisk, thresh);
 
@@ -125,19 +126,19 @@ export const App: React.FC = () => {
       {/* Academic MATLAB / Simulink Workbench Header */}
       <Header />
 
-      {/* Main Streaming Workbench Layout matching Slide 5 & 6 */}
-      <main className="flex-1 p-3.5 lg:p-5 space-y-3.5 max-w-[1920px] mx-auto w-full">
-        {/* STAGE 4: 2-MODE SWITCH + WI-FI OUTAGE FAIL-SAFE TOGGLE + MANUAL STEP CONTROLS */}
+      {/* Main SCADA Workbench: 3-Panel Streamlined High-Contrast Decision Architecture */}
+      <main className="flex-1 p-3.5 lg:p-5 space-y-4 max-w-[1920px] mx-auto w-full">
+        {/* Top Operating Bar: Mode 1/2 Switch, Link Outage Toggle, Cadence Controls */}
         <OperatingSwitchBar onStepOneSecond={executeTick} />
 
-        {/* STAGE 1 & 2: TIME-DOMAIN WAVEFORM (3,200 Hz) & RADIX-2 FFT SPECTRUM */}
-        <Plot1Oscilloscopes />
+        {/* PANEL A: THE INPUT (Raw & Quantized Signals) */}
+        <PanelASensorInput />
 
-        {/* STAGE 4: CLOUD 2D-STFT SPECTROGRAM & 2-SUBPLOT INA219 ENERGY PROFILER */}
-        <Plot2CloudAndEnergy />
+        {/* PANEL B: THE DECISION HIGHWAY (Center Stage - Massive Visibility) */}
+        <PanelBDecisionHighway />
 
-        {/* STAGE 3: CORE 1 TINYML (INT8 QAT, TEMPERATURE CALIBRATION, 8x8 BAYES RISK) */}
-        <Core1MathSummaryBar />
+        {/* PANEL C: CLOUD DEEP-DIVE (Triggered on Deferral) */}
+        <PanelCCloudDeepDive />
       </main>
     </div>
   );
