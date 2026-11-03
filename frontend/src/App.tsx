@@ -113,7 +113,7 @@ export const App: React.FC = () => {
   }, [isStreaming, executeTick]);
 
   return (
-    <div className="min-h-screen bg-[#07090C] text-[#F3F4F6] flex flex-col font-mono selection:bg-emerald-500 selection:text-black antialiased">
+    <div className="h-screen w-screen overflow-hidden bg-[#07090C] text-[#F3F4F6] flex flex-col font-mono selection:bg-emerald-500 selection:text-black antialiased">
       {/* Strict Backend Crash Check: Zero-Mock Enforced */}
       {error && (
         <BackendCrashOverlay
@@ -123,11 +123,11 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Academic MATLAB / Simulink Workbench Header */}
+      {/* Industrial SCADA Top Workbench Header */}
       <Header />
 
-      {/* Main SCADA Workbench: 3-Panel Streamlined High-Contrast Decision Architecture */}
-      <main className="flex-1 p-3.5 lg:p-5 space-y-4 max-w-[1920px] mx-auto w-full">
+      {/* Pinned Viewport Container with Smooth Contained Scroll */}
+      <main className="flex-1 overflow-y-auto p-3.5 lg:p-5 space-y-4 max-w-[1920px] mx-auto w-full">
         {/* Top Operating Bar: Mode 1/2 Switch, Link Outage Toggle, Cadence Controls */}
         <OperatingSwitchBar onStepOneSecond={executeTick} />
 

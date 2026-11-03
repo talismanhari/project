@@ -7,6 +7,7 @@ export interface Int8Features {
   names: string[];
   float_vals: number[];
   int8_vals: number[];
+  scale_factors?: number[];
 }
 
 export interface DecisionPayload {

@@ -53,6 +53,11 @@ FEATURE_NAMES = [
     "HighFreqEnergy", "CurrentRMS", "TempDrift"
 ]
 
+FEATURE_SCALES = [
+    0.0078, 0.0845, 0.1145, 0.0231, 0.0547, 0.0187,
+    0.0173, 0.0450, 13.676, 0.0181, 0.0422, 0.1752
+]
+
 CLASS_NAMES = [
     "Healthy", "Outer Race Fault", "Inner Race Fault", "Ball Defect",
     "Unbalance", "Misalignment", "Loose Stator", "Overload"
@@ -269,7 +274,8 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         "int8_features": {
             "names": FEATURE_NAMES,
             "float_vals": [round(float(v), 2) for v in float_vals],
-            "int8_vals": int8_vals
+            "int8_vals": int8_vals,
+            "scale_factors": FEATURE_SCALES
         },
         "decision": {
             "action": action,

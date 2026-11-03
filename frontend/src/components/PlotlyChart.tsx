@@ -23,6 +23,8 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
     if (!el) return;
 
     const baseLayout: Partial<Plotly.Layout> = {
+      uirevision: 'SCADA_LOCKED',
+      autosize: true,
       paper_bgcolor: '#0B0F19',
       plot_bgcolor: '#101622',
       font: {
@@ -31,14 +33,7 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
         size: 9,
       },
       margin: { l: 45, r: 15, t: 28, b: 34 },
-      showlegend: true,
-      legend: {
-        orientation: 'h',
-        x: 0,
-        y: 1.15,
-        font: { size: 9, color: '#E2E8F0', family: 'monospace' },
-        bgcolor: 'rgba(11, 15, 25, 0.7)',
-      },
+      showlegend: false,
       xaxis: {
         showgrid: true,
         gridcolor: '#1E293B',
@@ -69,17 +64,47 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
       ...config,
     };
 
-    Plotly.react(el, data, baseLayout, baseConfig);
+    // Decouple rendering from synchronous React DOM tree updates to eliminate scroll jitter
+    const rafId = requestAnimationFrame(() => {
+      if (containerRef.current) {
+        Plotly.react(containerRef.current, data, baseLayout, baseConfig);
+      }
+    });
 
     const handleResize = () => {
-      if (el) Plotly.Plots.resize(el);
+      if (containerRef.current) {
+        Plotly.Plots.resize(containerRef.current);
+      }
     };
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener('resize', handleResize);
     };
   }, [data, layout, config]);
 
-  return <div ref={containerRef} className={`w-full h-full ${className}`} style={style} />;
+  // Safe purge when unmounting
+  useEffect(() => {
+    const el = containerRef.current;
+    return () => {
+      if (el) {
+        try {
+          Plotly.purge(el);
+        } catch {
+          // ignore purge on unmount
+        }
+      }
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`w-full h-full overflow-hidden ${className}`}
+      style={style}
+    />
+  );
 };
+
+export default PlotlyChart;
