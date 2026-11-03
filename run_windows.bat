@@ -56,30 +56,18 @@ if %ERRORLEVEL% NEQ 0 (
 )
 echo [OK] firmware\include\tinyml_model_data.h successfully generated.
 
-:: 4. Check PlatformIO & Flash ESP32-S3
+:: 4. Check PlatformIO & Flash ESP32-S3 (Target: COM7)
 echo.
-echo [*] Step 4/5: Compiling & Flashing ESP32-S3 Firmware...
+echo [*] Step 4/5: Compiling & Flashing ESP32-S3 Firmware to COM7...
 pio --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [!] PlatformIO CLI not found in PATH. Attempting automatic installation via pip...
     pip install platformio --quiet
 )
 
-pio --version >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    echo [*] Scanning for connected ESP32-S3 COM port...
-    cd firmware
-    pio run -t upload
-    if %ERRORLEVEL% EQU 0 (
-        echo [OK] ESP32-S3 firmware successfully compiled and uploaded!
-    ) else (
-        echo [!] ESP32-S3 hardware upload skipped or device not plugged into USB.
-        echo     (You can run with simulated telemetry on the Cloud Dashboard.)
-    )
-    cd ..
-) else (
-    echo [!] PlatformIO could not be invoked. Skipping hardware flash.
-)
+pio run -d firmware -t upload --upload-port COM7
+if %ERRORLEVEL% neq 0 (echo [ERROR] Firmware flash to COM7 failed. & exit /b %ERRORLEVEL%)
+echo [OK] ESP32-S3 firmware successfully compiled and uploaded to COM7!
 
 :: 5. Launch Cloud Server & Open SCADA Dashboard
 echo.
