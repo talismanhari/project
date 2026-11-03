@@ -23,19 +23,19 @@
     }
   </script>
   <style>
-    body { background-color: #07090C; color: #F3F4F6; }
+    body { background-color: #020617; color: #F1F5F9; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #07090C; }
+    ::-webkit-scrollbar-track { background: #020617; }
     ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 3px; }
   </style>
 </head>
-<body class="h-screen w-screen overflow-hidden flex flex-col font-mono selection:bg-emerald-500 selection:text-black antialiased">
+<body class="h-screen w-screen overflow-hidden flex flex-col font-mono selection:bg-emerald-500 selection:text-black antialiased bg-slate-950 text-slate-100">
 
   <!-- TOP WORKBENCH HEADER -->
-  <header class="border-b border-[#1E293B] bg-[#0B0F19] px-4 lg:px-6 py-2.5 shrink-0 shadow-lg">
+  <header class="border-b border-[#1E293B] bg-[#0B0F19] px-4 lg:px-6 py-2 shrink-0 shadow-lg">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
           μC
         </div>
         <div>
@@ -43,7 +43,7 @@
             <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
               Edge AI Digital Twin Workbench
             </span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+            <span class="inline-flex items-center px-2 py-0.2 rounded text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
               <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
               SYSTEM ARMED - CONTINUOUS VIBRATION & THERMAL MONITORING
             </span>
@@ -52,7 +52,7 @@
               WS ONLINE
             </span>
           </div>
-          <h1 class="text-xs sm:text-sm lg:text-base font-bold text-white tracking-tight font-sans">
+          <h1 class="text-xs sm:text-sm font-bold text-white tracking-tight font-sans">
             Empirical Cost Modeling of Calibrated Inference Deferral in Microcontroller Edge AI
           </h1>
         </div>
@@ -63,7 +63,7 @@
         <div class="hidden xl:flex items-center gap-2 bg-[#101622] px-2.5 py-1 rounded-md border border-[#1E293B] text-[11px] text-gray-400">
           <span>Node: <strong class="text-gray-100">ESP32-S3 (240MHz)</strong> | <strong class="text-amber-300">COM7</strong></span>
           <span>•</span>
-          <span>Cloud: <strong class="text-purple-400">RTX 3050 CUDA</strong></span>
+          <span>Cloud: <strong class="text-purple-400">RTX 3050 CUDA 12.1</strong></span>
         </div>
 
         <div class="flex items-center rounded-lg border border-[#1E293B] bg-[#101622] p-1 gap-1">
@@ -91,171 +91,183 @@
     </div>
   </header>
 
-  <!-- MAIN SCADA WORKBENCH (PINNED FULL-HEIGHT SCROLLABLE CONTAINER) -->
-  <main class="flex-1 overflow-y-auto p-3.5 lg:p-5 space-y-4 max-w-[1920px] mx-auto w-full">
+  <!-- MAIN SCADA WORKBENCH (LOCKED VIEWPORT WITH INTERNAL SMOOTH SCROLL) -->
+  <main class="flex-1 overflow-y-auto p-3 space-y-3 max-w-[1920px] mx-auto w-full">
 
-    <!-- ========================================================================= -->
-    <!-- PANEL A: THE INPUT (Raw & Quantized Signals)                              -->
-    <!-- ========================================================================= -->
-    <div class="rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-4 space-y-3 shadow-xl">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#1E293B] pb-2.5">
-        <div class="flex items-center gap-2.5">
-          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-            PANEL A: SENSOR INPUT & INT8 QUANTIZATION
-          </span>
-          <span id="acqModeBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-            [STANDBY ENGINE ACTIVE]
-          </span>
+    <!-- ROW 1: STAGE 1 (Oscilloscope) & STAGE 2 (Cost Matrix Table) -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
+      <!-- Stage 1 Oscilloscope (Cols 1-7) -->
+      <div class="xl:col-span-7 h-[260px] min-h-[260px] max-h-[260px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="text-[11px] font-bold text-white tracking-wider uppercase">STAGE 1: RAW MULTI-AXIS TRANSDUCER OSCILLOSCOPE</span>
+            <span id="acqModeBadge" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              [SYNTHETIC_ACTIVE]
+            </span>
+          </div>
+          <div class="text-[10px] text-gray-400">
+            Tri-Axial [-20, 20] m/s² • Audio [-1.0, 1.0]
+          </div>
         </div>
-        <div class="text-[11px] text-gray-400">
-          ODR: <strong class="text-gray-200">3,200 Hz</strong> • 100-Sample Oscilloscope Buffer
+        <div class="flex-1 w-full overflow-hidden mt-1 rounded-lg border border-[#1E293B]">
+          <div id="plotWaveform" class="w-full h-full"></div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
-        <!-- Live Waveform Scope (Cols 1-7) - Pinned Explicit Height -->
-        <div class="xl:col-span-7 rounded-xl border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between">
-          <div class="flex items-center justify-between text-[11px] text-gray-400 px-1 mb-1">
-            <span>Time-Domain Vibration Waveform [Normalized ±1.0]</span>
-            <span class="text-emerald-400 font-bold">ADXL345 SPI + INMP441 Acoustic</span>
-          </div>
-          <div class="h-[280px] min-h-[280px] max-h-[280px] w-full rounded-lg overflow-hidden border border-[#1E293B]">
-            <div id="plotWaveform" class="w-full h-full"></div>
-          </div>
+      <!-- Stage 2 Cost Matrix Diagnostic Table (Cols 8-12) -->
+      <div class="xl:col-span-5 h-[260px] min-h-[260px] max-h-[260px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
+          <span class="text-[11px] font-bold text-white tracking-wider uppercase">STAGE 2: ASYMMETRIC BAYES RISK CALCULATION</span>
+          <span id="riskVerdictBadge" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+            R ≤ 1.20 (SAFE)
+          </span>
         </div>
-
-        <!-- 12-Feature INT8 Quantization Grid (Cols 8-12) - Pinned Explicit Height & S_i -->
-        <div class="xl:col-span-5 rounded-xl border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between h-[324px] min-h-[324px] max-h-[324px] overflow-hidden">
-          <div class="flex items-center justify-between text-[11px] text-gray-400 px-1 border-b border-[#1E293B] pb-1.5 mb-1.5">
-            <span class="font-bold text-gray-300">12 DSP Edge Features (Float → INT8)</span>
-            <span class="text-[10px] text-cyan-400 font-mono">q = round(x / S)</span>
-          </div>
-          <div id="featuresGrid" class="grid grid-cols-2 gap-1.5 flex-1 overflow-y-auto pr-1">
-            <!-- Dynamically populated in JavaScript with S_i -->
-          </div>
+        <div class="flex-1 overflow-y-auto my-1 border border-[#1E293B] rounded-lg bg-[#101622]">
+          <table class="w-full text-left text-[10px] font-mono border-collapse">
+            <thead class="bg-[#07090C] text-gray-400 sticky top-0 border-b border-[#1E293B]">
+              <tr>
+                <th className="py-1 px-2 font-semibold">Fault State (y)</th>
+                <th className="py-1 px-1 text-right font-semibold">P(y|x) %</th>
+                <th className="py-1 px-1 text-right font-semibold">Cost C(a,y)</th>
+                <th className="py-1 px-2 text-right font-semibold">Risk Contribution</th>
+              </tr>
+            </thead>
+            <tbody id="costTableBody" class="divide-y divide-[#1A2333]">
+              <!-- Dynamically populated in JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="costTotalRow" class="shrink-0 flex items-center justify-between p-1.5 rounded-lg border text-[11px] font-mono bg-emerald-500/15 border-emerald-500/40 text-emerald-200">
+          <span class="font-bold">Total Bayes Risk: R = ∑ C(a, y) · P(y|x)</span>
+          <span id="costTotalText" class="font-extrabold text-xs">R = 0.370 ≤ 1.20 [LOCAL SAFE]</span>
         </div>
       </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- PANEL B: THE DECISION HIGHWAY (Center Stage - Massive Visibility)        -->
-    <!-- ========================================================================= -->
-    <div class="rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-5 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-[#1E293B] pb-2">
-        <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+    <!-- ROW 2: STAGE 3 (Decision Highway Banner & Analog Risk Dial) -->
+    <div class="rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 space-y-2 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
+        <span class="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          PANEL B: THE DECISION HIGHWAY (BAYES ASYMMETRIC RISK)
+          STAGE 3: DECISION HIGHWAY (BAYES ASYMMETRIC RISK GATE)
         </span>
-        <span class="text-[11px] text-gray-400">
-          Threshold: <strong class="text-amber-400">θ = 1.20</strong> • Calibration Temp: <strong class="text-cyan-400">T = 1.45</strong>
+        <span class="text-[10px] text-gray-400">
+          Boundary: <strong class="text-amber-400">θ = 1.20</strong> • Calibration Temp: <strong class="text-cyan-400">T = 1.45</strong>
         </span>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        <!-- Giant Contrast Decision Banner (Cols 1-8) - Pinned Explicit Height -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+        <!-- Giant Annunciator Banner (Cols 1-8) -->
         <div class="lg:col-span-8 flex flex-col justify-center">
-          <div id="decisionBanner" class="h-[280px] min-h-[280px] max-h-[280px] p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-center bg-[#072418] border-emerald-500 shadow-[0_0_35px_rgba(16,185,129,0.3)]">
-            <div class="flex items-center gap-3">
-              <span id="decisionIndicatorDot" class="w-4 h-4 rounded-full bg-emerald-400 animate-ping"></span>
+          <div id="decisionBanner" class="h-[200px] min-h-[200px] max-h-[200px] p-5 rounded-xl border transition-all duration-300 flex flex-col justify-center bg-[#072418] border-emerald-500 shadow-[0_0_35px_rgba(16,185,129,0.3)] overflow-hidden">
+            <div class="flex items-center gap-2.5">
+              <span id="decisionIndicatorDot" class="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping"></span>
               <span id="decisionLabel" class="text-xs font-bold tracking-widest uppercase text-emerald-400">
                 100% CONFIDENT LOCAL INFERENCE
               </span>
             </div>
-            <div id="decisionHeading" class="text-2xl sm:text-3xl lg:text-[34px] font-extrabold tracking-tight font-sans text-white mt-3 leading-tight">
+            <div id="decisionHeading" class="text-xl sm:text-2xl lg:text-[28px] font-extrabold tracking-tight font-sans text-white mt-2 leading-tight">
               [ PROCESSED ON EDGE: 100% LOCAL INFERENCE ]
             </div>
-            <div id="decisionSubtext" class="text-sm font-sans text-emerald-200 mt-3 font-medium">
+            <div id="decisionSubtext" class="text-xs font-sans text-emerald-200 mt-2 font-medium leading-relaxed">
               Risk: 0.142 (Below 1.20 Threshold) • Model Confident • Zero Cloud Latency • 0.50 mJ Local
             </div>
           </div>
         </div>
 
-        <!-- Analog / Semi-Circular Risk Dial (Cols 9-12) - Pinned Explicit Height -->
-        <div class="lg:col-span-4 rounded-xl border border-[#1E293B] bg-[#101622] p-3 flex flex-col justify-between h-[280px] min-h-[280px] max-h-[280px]">
-          <div class="w-full flex items-center justify-between text-[11px] text-gray-400 px-1">
+        <!-- Risk Dial (Cols 9-12) -->
+        <div class="lg:col-span-4 rounded-xl border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between h-[200px] min-h-[200px] max-h-[200px] overflow-hidden">
+          <div class="w-full flex items-center justify-between text-[10px] text-gray-400 px-1 shrink-0">
             <span class="font-bold">Bayes Risk Dial R(x)</span>
-            <span id="riskBadge" class="text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-500/10">R(x) = 0.142</span>
+            <span id="riskBadge" class="text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/10">R = 0.142</span>
           </div>
-          <div class="h-[210px] w-full overflow-hidden">
+          <div class="flex-1 w-full overflow-hidden">
             <div id="plotRiskDial" class="w-full h-full"></div>
           </div>
-          <div class="text-[10px] text-gray-400 font-mono text-center border-t border-[#1E293B] pt-1">
+          <div class="text-[9px] text-gray-500 font-mono text-center border-t border-[#1E293B] pt-0.5 shrink-0">
             Safe Local: [0.0 - 1.20] • Cloud Deferral: [1.20 - 3.00]
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- PANEL C: CLOUD DEEP-DIVE (Triggered on Deferral)                          -->
-    <!-- ========================================================================= -->
-    <div id="panelCContainer" class="rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-4 space-y-3 transition-all duration-500 shadow-xl">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#1E293B] pb-2.5">
-        <div class="flex items-center gap-2.5">
-          <span id="cloudStatusDot" class="w-2.5 h-2.5 rounded-full bg-gray-600"></span>
-          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            PANEL C: CLOUD DEEP-DIVE (RTX 3050 GPU ACCELERATED)
-          </span>
-          <span id="cloudStatusBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-800 text-gray-400 border border-[#1E293B]">
-            GPU IDLE STANDBY
-          </span>
-        </div>
-        <div id="cloudVerdictText" class="text-[11px] text-gray-400">
-          PyTorch STFT N=256 H=64 • ResNet-50 Validation
-        </div>
-      </div>
-
-      <!-- State 1: Local Standby Display (Default) - Pinned Explicit Height -->
-      <div id="cloudIdleState" class="h-[280px] min-h-[280px] max-h-[280px] rounded-xl border border-dashed border-[#1E293B] bg-[#101622]/60 flex flex-col justify-center items-center text-center p-6 space-y-2">
-        <div class="text-sm font-bold text-gray-200 font-sans">
-          NVIDIA RTX 3050 Accelerator In Idle Standby
-        </div>
-        <div class="text-xs text-gray-400 max-w-xl mx-auto leading-relaxed">
-          The ESP32-S3 edge node is currently executing 100% confident local INT8 inferences with zero latency penalty. When Bayes Risk exceeds θ = 1.20, the high-resolution 2D STFT Spectrogram and secondary GPU fault confirmation pipeline will illuminate here instantly.
-        </div>
-        <div class="text-[10px] text-gray-500 bg-[#0B0F19] px-3 py-1 rounded border border-[#1E293B]">
-          Awaiting Deferred Trigger Frame...
-        </div>
-      </div>
-
-      <!-- State 2: Active Offload Spectrogram (Illuminated when Deferral Triggers) -->
-      <div id="cloudActiveState" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-        <div class="lg:col-span-8 rounded-xl border border-red-500/40 bg-[#101622] p-2.5 space-y-1.5 shadow-[0_0_30px_rgba(239,68,68,0.15)] flex flex-col justify-between">
-          <div class="flex items-center justify-between text-[11px] text-gray-300 px-1">
-            <span class="font-bold text-red-400">2D STFT Time-Frequency Spectrogram [Viridis Log-PSD]</span>
-            <span class="text-[10px] text-gray-400 font-mono">0 - 1600 Hz Nyquist</span>
+    <!-- ROW 3: STAGE 4 (CUDA Spectrogram Heatmap) & STAGE 5 (Energy Subsystem) -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
+      <!-- Stage 4 2D STFT Spectrogram Heatmap (Cols 1-7) -->
+      <div class="xl:col-span-7 h-[260px] min-h-[260px] max-h-[260px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold text-white tracking-wider uppercase">STAGE 4: 2D PYTORCH STFT SPECTROGRAM (CUDA ACCELERATED)</span>
+            <span id="cloudStatusBadge" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-gray-800 text-gray-400 border border-[#1E293B]">
+              GPU IDLE STANDBY
+            </span>
           </div>
-          <div class="h-[280px] min-h-[280px] max-h-[280px] w-full rounded-lg overflow-hidden border border-[#1E293B]">
+          <div class="text-[10px] text-gray-400">
+            PyTorch STFT (N=256, H=64) • 0 - 1600 Hz
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch flex-1 overflow-hidden mt-1">
+          <div class="lg:col-span-8 rounded-lg overflow-hidden border border-[#1E293B]">
             <div id="plotSpectrogram" class="w-full h-full"></div>
           </div>
-        </div>
-
-        <div class="lg:col-span-4 rounded-xl border border-red-500/40 bg-[#160E12] p-4 flex flex-col justify-between h-[324px] min-h-[324px] max-h-[324px]">
-          <div>
-            <div class="text-[11px] font-bold text-red-400 uppercase tracking-wider mb-2 border-b border-red-500/30 pb-1.5">
-              RTX 3050 Secondary Validation Verdict
+          <div class="lg:col-span-4 rounded-lg border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between overflow-hidden">
+            <div>
+              <div class="text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1 border-b border-[#1E293B] pb-1">
+                RTX 3050 Validation Engine
+              </div>
+              <div class="text-sm font-bold text-white font-sans mt-1.5" id="confirmedFaultTitle">
+                Outer Race (BPFO)
+              </div>
+              <div class="text-[10px] text-gray-400 mt-1 leading-relaxed" id="confirmedFaultDesc">
+                PyTorch CUDA STFT analysis ready.
+              </div>
             </div>
-            <div class="text-xl font-bold text-white font-sans mt-2" id="confirmedFaultTitle">
-              Outer Race Fault (BPFO)
-            </div>
-            <div class="text-xs text-red-200/90 mt-2 leading-relaxed" id="confirmedFaultDesc">
-              Dominant peak detected at 104.2 Hz harmonic series with 99.8% model confidence via PyTorch CUDA.
+            <div class="p-2 rounded bg-[#07090C] border border-[#1E293B] text-[10px] space-y-1">
+              <div class="flex justify-between text-gray-400">
+                <span>Latency:</span>
+                <strong class="text-cyan-300 font-mono" id="gpuLatencyText">1.82 ms</strong>
+              </div>
+              <div class="flex justify-between text-gray-400">
+                <span>Acceleration:</span>
+                <strong class="text-white">CUDA Float32</strong>
+              </div>
+              <div class="flex justify-between text-gray-400">
+                <span>Verdict:</span>
+                <strong class="text-emerald-400" id="gpuVerdictText">CONFIRMED</strong>
+              </div>
             </div>
           </div>
-          <div class="p-3 rounded-lg bg-[#07090C] border border-red-500/30 text-[11px] space-y-2">
-            <div class="flex justify-between text-gray-400">
-              <span>GPU Compute Latency:</span>
-              <strong class="text-cyan-300 font-mono" id="gpuLatencyText">1.82 ms</strong>
+        </div>
+      </div>
+
+      <!-- Stage 5 Energy Subsystem & INT8 Quantization (Cols 8-12) -->
+      <div class="xl:col-span-5 h-[260px] min-h-[260px] max-h-[260px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl">
+        <div class="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
+          <span class="text-[11px] font-bold text-white tracking-wider uppercase">STAGE 5: ENERGY INSTRUMENTATION & INT8 SCALING</span>
+          <span id="inaBadge" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+            [ENERGY TELEMETRY: HARDWARE SENSOR OFFLINE (INA219 DISCONNECTED)]
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 my-1 shrink-0">
+          <div class="p-2 rounded-lg bg-[#101622] border border-[#1E293B] flex items-center justify-between">
+            <div>
+              <div class="text-[9px] text-gray-400">ESP32-S3 Edge Baseline</div>
+              <div class="text-xs font-bold text-emerald-300 font-mono">~310 mW</div>
             </div>
-            <div class="flex justify-between text-gray-400">
-              <span>Acceleration Pipeline:</span>
-              <strong class="text-white">CUDA Float32 Core</strong>
+            <span class="text-[9px] text-emerald-400 bg-emerald-500/10 px-1 rounded">0.50 mJ/inf</span>
+          </div>
+          <div class="p-2 rounded-lg bg-[#101622] border border-[#1E293B] flex items-center justify-between">
+            <div>
+              <div class="text-[9px] text-gray-400">RTX 3050 Cloud Compute</div>
+              <div class="text-xs font-bold text-purple-300 font-mono">~45 W Burst</div>
             </div>
-            <div class="flex justify-between text-gray-400">
-              <span>Defect Confirmation:</span>
-              <strong class="text-emerald-400">CONFIRMED</strong>
-            </div>
+            <span class="text-[9px] text-purple-400 bg-purple-500/10 px-1 rounded">82.1 mJ/inf</span>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto border border-[#1E293B] rounded-lg bg-[#101622] p-1.5">
+          <div id="featuresGrid" class="grid grid-cols-3 gap-1">
+            <!-- Dynamically populated in JS -->
           </div>
         </div>
       </div>
@@ -263,7 +275,7 @@
 
   </main>
 
-  <!-- JAVASCRIPT ORCHESTRATION ENGINE -->
+  <!-- ZERO-FLICKER JAVASCRIPT ORCHESTRATION ENGINE -->
   <script>
     let currentMode = 'MODE_1_NORMAL';
     let isOutage = false;
@@ -271,36 +283,38 @@
     let windowIdx = 1;
 
     const basePlotLayout = {
-      uirevision: 'SCADA_LOCKED',
+      uirevision: 'constant',
       autosize: true,
       paper_bgcolor: '#101622',
       plot_bgcolor: '#101622',
       font: { family: 'JetBrains Mono, monospace', color: '#9CA3AF', size: 9 },
-      margin: { l: 40, r: 15, t: 15, b: 30 },
+      margin: { l: 38, r: 38, t: 10, b: 24 },
       xaxis: { showgrid: true, gridcolor: '#1E293B', zerolinecolor: '#334155' },
       yaxis: { showgrid: true, gridcolor: '#1E293B', zerolinecolor: '#334155' }
     };
 
     function initPlots() {
-      // 1. Raw Waveform Scope (Panel A)
-      Plotly.newPlot('plotWaveform', [{
-        x: Array.from({length: 100}, (_, i) => i * 10),
-        y: new Array(100).fill(0),
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#10B981', width: 1.5 }
-      }], {
+      // 1. Stage 1 Raw Oscilloscope
+      Plotly.newPlot('plotWaveform', [
+        { x: Array.from({length: 100}, (_, i) => i * 10), y: new Array(100).fill(0), type: 'scatter', mode: 'lines', name: 'a_x', line: { color: '#10B981', width: 1.5 } },
+        { x: Array.from({length: 100}, (_, i) => i * 10), y: new Array(100).fill(0), type: 'scatter', mode: 'lines', name: 'a_y', line: { color: '#06B6D4', width: 1.2 } },
+        { x: Array.from({length: 100}, (_, i) => i * 10), y: new Array(100).fill(9.81), type: 'scatter', mode: 'lines', name: 'a_z', line: { color: '#F59E0B', width: 1.2 } },
+        { x: Array.from({length: 100}, (_, i) => i * 10), y: new Array(100).fill(0), type: 'scatter', mode: 'lines', name: 'Mic', yaxis: 'y2', line: { color: '#EC4899', width: 1.0, dash: 'dot' } }
+      ], {
         ...basePlotLayout,
+        showlegend: true,
+        legend: { orientation: 'h', x: 0, y: 1.15, font: { size: 9, color: '#E2E8F0' }, bgcolor: 'rgba(16,22,34,0.8)' },
         xaxis: { ...basePlotLayout.xaxis, title: { text: 'Time [ms]', font: { size: 9 } } },
-        yaxis: { ...basePlotLayout.yaxis, title: { text: 'Amp [g]', font: { size: 9 } }, range: [-0.6, 0.6] }
+        yaxis: { ...basePlotLayout.yaxis, title: { text: 'Accel [m/s²]', font: { size: 9 } }, range: [-20, 20] },
+        yaxis2: { title: { text: 'Audio', font: { size: 9, color: '#EC4899' } }, range: [-1, 1], overlaying: 'y', side: 'right', showgrid: false }
       }, { responsive: true, displayModeBar: false });
 
-      // 2. Risk Dial (Panel B)
+      // 2. Stage 3 Risk Dial
       Plotly.newPlot('plotRiskDial', [{
         type: 'indicator',
         mode: 'gauge+number',
         value: 0.142,
-        number: { font: { family: 'JetBrains Mono, monospace', size: 26, color: '#10B981' }, valueformat: '.3f' },
+        number: { font: { family: 'JetBrains Mono, monospace', size: 24, color: '#10B981' }, valueformat: '.3f' },
         gauge: {
           axis: { range: [0, 3.0], tickwidth: 1, tickcolor: '#64748B', tickfont: { size: 8 } },
           bar: { color: '#10B981', thickness: 0.32 },
@@ -311,15 +325,27 @@
             { range: [0, 1.20], color: 'rgba(16, 185, 129, 0.22)' },
             { range: [1.20, 3.0], color: 'rgba(239, 68, 68, 0.28)' }
           ],
-          threshold: {
-            line: { color: '#F59E0B', width: 4 },
-            thickness: 0.85,
-            value: 1.20
-          }
+          threshold: { line: { color: '#F59E0B', width: 4 }, thickness: 0.85, value: 1.20 }
         }
       }], {
         ...basePlotLayout,
-        margin: { l: 20, r: 20, t: 25, b: 15 }
+        margin: { l: 20, r: 20, t: 20, b: 15 }
+      }, { responsive: true, displayModeBar: false });
+
+      // 3. Stage 4 Spectrogram
+      Plotly.newPlot('plotSpectrogram', [{
+        z: Array.from({length: 129}, () => new Array(13).fill(-50)),
+        x: Array.from({length: 13}, (_, i) => i * 0.08),
+        y: Array.from({length: 129}, (_, i) => i * 12.5),
+        type: 'heatmap',
+        colorscale: 'Viridis',
+        zsmooth: 'best',
+        colorbar: { len: 0.95, thickness: 10, tickfont: { size: 7 } }
+      }], {
+        ...basePlotLayout,
+        margin: { l: 35, r: 10, t: 10, b: 24 },
+        xaxis: { ...basePlotLayout.xaxis, title: { text: 'Time [s]', font: { size: 8 } } },
+        yaxis: { ...basePlotLayout.yaxis, title: { text: 'Freq [Hz]', font: { size: 8 } }, range: [0, 1600] }
       }, { responsive: true, displayModeBar: false });
     }
 
@@ -348,11 +374,7 @@
         const res = await fetch('/simulate_cycle', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mode: currentMode,
-            window_idx: windowIdx,
-            outage_failsafe: isOutage
-          })
+          body: JSON.stringify({ mode: currentMode, window_idx: windowIdx, outage_failsafe: isOutage })
         });
         const data = await res.json();
         handleIncomingFrame(data);
@@ -367,63 +389,72 @@
     ];
 
     function handleIncomingFrame(data) {
-      // 1. PANEL A: Update Hardware Badge & Waveform
-      const hw = data.hardware_status || {};
-      const badge = document.getElementById('acqModeBadge');
-      if (hw.is_physical) {
-        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
-        badge.innerText = '[PHYSICAL HARDWARE ACQUISITION]';
+      // 1. Stage 1 Oscilloscope (Zero-Flicker in-place update)
+      const acq = data.acquisition || {};
+      const pts = acq.times_ms || Array.from({length: 100}, (_, i) => i * 10);
+      const ax = acq.accel_x || data.raw_waveform || new Array(100).fill(0);
+      const ay = acq.accel_y || ax.map(v => v * 0.7);
+      const az = acq.accel_z || ax.map(v => 9.81 + v * 0.5);
+      const mic = acq.acoustic || ax.map(v => v * 0.05);
+
+      Plotly.react('plotWaveform', [
+        { x: pts, y: ax, type: 'scatter', mode: 'lines', name: 'a_x', line: { color: '#10B981', width: 1.5 } },
+        { x: pts, y: ay, type: 'scatter', mode: 'lines', name: 'a_y', line: { color: '#06B6D4', width: 1.2 } },
+        { x: pts, y: az, type: 'scatter', mode: 'lines', name: 'a_z', line: { color: '#F59E0B', width: 1.2 } },
+        { x: pts, y: mic, type: 'scatter', mode: 'lines', name: 'Mic', yaxis: 'y2', line: { color: '#EC4899', width: 1.0, dash: 'dot' } }
+      ], {
+        ...basePlotLayout,
+        showlegend: true,
+        legend: { orientation: 'h', x: 0, y: 1.15, font: { size: 9, color: '#E2E8F0' }, bgcolor: 'rgba(16,22,34,0.8)' },
+        xaxis: { ...basePlotLayout.xaxis, title: { text: 'Time [ms]', font: { size: 9 } } },
+        yaxis: { ...basePlotLayout.yaxis, title: { text: 'Accel [m/s²]', font: { size: 9 } }, range: [-20, 20] },
+        yaxis2: { title: { text: 'Audio', font: { size: 9, color: '#EC4899' } }, range: [-1, 1], overlaying: 'y', side: 'right', showgrid: false }
+      }, { responsive: true, displayModeBar: false });
+
+      // 2. Stage 2 Cost Table
+      const costTable = data.cost_table || {};
+      const classes = costTable.classes || [];
+      const probs = costTable.probabilities || [];
+      const costs = costTable.costs || [];
+      const wRisks = costTable.weighted_risks || [];
+      const totalR = costTable.total_risk || (data.decision?.risk_score || 0.142);
+      const isDef = totalR > 1.20;
+
+      const tBody = document.getElementById('costTableBody');
+      tBody.innerHTML = '';
+      classes.forEach((cName, idx) => {
+        const p = probs[idx] !== undefined ? (probs[idx] * 100).toFixed(1) : '0.0';
+        const c = costs[idx] !== undefined ? costs[idx].toFixed(1) : '0.0';
+        const w = wRisks[idx] !== undefined ? wRisks[idx].toFixed(4) : '0.0000';
+        const row = document.createElement('tr');
+        row.className = p > 50 ? 'bg-cyan-500/10 text-cyan-200' : 'text-gray-300';
+        row.innerHTML = `
+          <td class="py-0.5 px-2 truncate max-w-[120px] font-medium">${cName}</td>
+          <td class="py-0.5 px-1 text-right font-bold">${p}%</td>
+          <td class="py-0.5 px-1 text-right text-amber-300 font-mono">${c}</td>
+          <td class="py-0.5 px-2 text-right text-emerald-300 font-mono">${w}</td>
+        `;
+        tBody.appendChild(row);
+      });
+
+      const rBadge = document.getElementById('riskVerdictBadge');
+      const rRow = document.getElementById('costTotalRow');
+      const rText = document.getElementById('costTotalText');
+      if (isDef) {
+        rBadge.className = 'px-2 py-0.2 rounded-full text-[9px] font-bold bg-red-500/20 text-red-400 border border-red-500/40';
+        rBadge.innerText = 'R > 1.20 (DEFER)';
+        rRow.className = 'shrink-0 flex items-center justify-between p-1.5 rounded-lg border text-[11px] font-mono bg-red-500/15 border-red-500/40 text-red-200';
+        rText.innerText = `R = ${totalR.toFixed(3)} > 1.20 [CLOUD DEFERRAL]`;
       } else {
-        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30';
-        badge.innerText = '[STANDBY ENGINE ACTIVE]';
+        rBadge.className = 'px-2 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+        rBadge.innerText = 'R ≤ 1.20 (SAFE)';
+        rRow.className = 'shrink-0 flex items-center justify-between p-1.5 rounded-lg border text-[11px] font-mono bg-emerald-500/15 border-emerald-500/40 text-emerald-200';
+        rText.innerText = `R = ${totalR.toFixed(3)} ≤ 1.20 [LOCAL SAFE]`;
       }
 
-      if (data.raw_waveform) {
-        const xPts = data.raw_waveform.map((_, i) => i * 10);
-        Plotly.react('plotWaveform', [{
-          x: xPts,
-          y: data.raw_waveform,
-          type: 'scatter',
-          mode: 'lines',
-          line: { color: hw.is_physical ? '#10B981' : '#F59E0B', width: 1.5 }
-        }], {
-          ...basePlotLayout,
-          xaxis: { ...basePlotLayout.xaxis, title: { text: 'Time [ms]', font: { size: 9 } } },
-          yaxis: { ...basePlotLayout.yaxis, title: { text: 'Amp [g]', font: { size: 9 } }, range: [-0.6, 0.6] }
-        }, { responsive: true, displayModeBar: false });
-      }
-
-      // 12-Feature INT8 Table with S_i
-      const feats = data.int8_features || {};
-      const fGrid = document.getElementById('featuresGrid');
-      if (feats.names && feats.float_vals && feats.int8_vals) {
-        fGrid.innerHTML = '';
-        const scales = feats.scale_factors || defaultScales;
-        feats.names.forEach((name, i) => {
-          const flt = feats.float_vals[i];
-          const i8 = feats.int8_vals[i];
-          const sc = scales[i] !== undefined ? scales[i] : 0.05;
-          const scStr = sc < 1 ? sc.toFixed(4) : sc.toFixed(1);
-          const pill = document.createElement('div');
-          pill.className = 'p-1.5 rounded bg-[#07090C] border border-[#1E293B] text-[10px] flex flex-col justify-between font-mono hover:border-cyan-500/40 transition-colors';
-          pill.innerHTML = `
-            <div class="flex items-center justify-between text-gray-400 border-b border-[#151D2A] pb-0.5">
-              <span class="truncate max-w-[90px] font-semibold text-gray-300" title="${name}">${name}</span>
-              <span class="text-[9px] text-gray-500">S:${scStr}</span>
-            </div>
-            <div class="flex items-center justify-between pt-0.5">
-              <span class="text-cyan-300 font-bold">${flt}</span>
-              <span class="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded">INT8: ${i8 >= 0 ? '+' + i8 : i8}</span>
-            </div>
-          `;
-          fGrid.appendChild(pill);
-        });
-      }
-
-      // 2. PANEL B: Center Stage Decision Highway
+      // 3. Stage 3 Decision Highway Banner & Dial
       const dec = data.decision || {};
-      const riskScore = dec.risk_score || 0.142;
-      const isCloud = (dec.action === 'CLOUD');
+      const isCloud = (dec.action === 'CLOUD') || (costTable.verdict === 'DEFERRED_TO_RTX3050') || isDef;
       const isFailsafe = (dec.action === 'EDGE_FAILSAFE');
 
       const banner = document.getElementById('decisionBanner');
@@ -432,44 +463,42 @@
       const heading = document.getElementById('decisionHeading');
       const subtext = document.getElementById('decisionSubtext');
 
-      const rBadge = document.getElementById('riskBadge');
-      rBadge.innerText = `R(x) = ${riskScore.toFixed(3)}`;
-      rBadge.className = isCloud
-        ? 'text-red-400 font-bold px-2 py-0.5 rounded bg-red-500/10'
-        : 'text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-500/10';
+      const dialBadge = document.getElementById('riskBadge');
+      dialBadge.innerText = `R = ${totalR.toFixed(3)}`;
+      dialBadge.className = isCloud ? 'text-red-400 font-bold px-2 py-0.2 rounded bg-red-500/10' : 'text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/10';
 
       if (isCloud) {
-        banner.className = 'h-[280px] min-h-[280px] max-h-[280px] p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-center bg-[#2B0E14] border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.35)]';
-        dot.className = 'w-4 h-4 rounded-full bg-red-400 animate-ping';
+        banner.className = 'h-[200px] min-h-[200px] max-h-[200px] p-5 rounded-xl border transition-all duration-300 flex flex-col justify-center bg-[#2B0E14] border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.35)] overflow-hidden';
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-red-400 animate-ping';
         label.className = 'text-xs font-bold tracking-widest uppercase text-red-400';
-        label.innerText = 'HIGH RISK DEFERRAL TRIGGERED — CLOUD OFFLOAD ENGAGED';
-        heading.innerText = '[ HIGH UNCERTAINTY: DEFERRING TO RTX 3050 CLOUD ]';
-        subtext.className = 'text-sm font-sans text-red-200 mt-3 font-medium';
-        subtext.innerText = `Risk: ${riskScore.toFixed(3)} (Exceeds θ = 1.20 Boundary) • Local Inference Uncertain • Payload Deferred to RTX 3050 for Heavy Spectrogram Validation`;
+        label.innerText = 'HIGH RISK ANOMALY — DEFERRED TO RTX 3050 CLOUD';
+        heading.innerText = '[ HIGH RISK ANOMALY: DEFERRED TO RTX 3050 CLOUD ]';
+        subtext.className = 'text-xs font-sans text-red-200 mt-2 font-medium leading-relaxed';
+        subtext.innerText = `Bayes Risk: ${totalR.toFixed(3)} exceeds θ = 1.20 boundary • Local edge confidence uncertain • Deferral engaged for heavy GPU STFT validation.`;
       } else if (isFailsafe) {
-        banner.className = 'h-[280px] min-h-[280px] max-h-[280px] p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-center bg-[#2B1E08] border-amber-500 shadow-[0_0_40px_rgba(245,158,11,0.35)]';
-        dot.className = 'w-4 h-4 rounded-full bg-amber-400 animate-pulse';
+        banner.className = 'h-[200px] min-h-[200px] max-h-[200px] p-5 rounded-xl border transition-all duration-300 flex flex-col justify-center bg-[#2B1E08] border-amber-500 shadow-[0_0_35px_rgba(245,158,11,0.35)] overflow-hidden';
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-amber-400 animate-pulse';
         label.className = 'text-xs font-bold tracking-widest uppercase text-amber-400';
         label.innerText = 'WI-FI LINK OUTAGE — DETERMINISTIC FAIL-SAFE ACTIVE';
         heading.innerText = '[ OFFLINE FAIL-SAFE: LOCAL EDGE INFERENCE ENFORCED ]';
-        subtext.className = 'text-sm font-sans text-amber-200 mt-3 font-medium';
-        subtext.innerText = `Risk: ${riskScore.toFixed(3)} • Wi-Fi Channel Dropped • Autonomous Fallback Prevents Flatline • 0.50 mJ Energy Budget Enforced`;
+        subtext.className = 'text-xs font-sans text-amber-200 mt-2 font-medium leading-relaxed';
+        subtext.innerText = `Risk: ${totalR.toFixed(3)} • Wi-Fi dropped • Autonomous fallback prevents flatline • 0.50 mJ energy budget enforced.`;
       } else {
-        banner.className = 'h-[280px] min-h-[280px] max-h-[280px] p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-center bg-[#072418] border-emerald-500 shadow-[0_0_35px_rgba(16,185,129,0.3)]';
-        dot.className = 'w-4 h-4 rounded-full bg-emerald-400 animate-ping';
+        banner.className = 'h-[200px] min-h-[200px] max-h-[200px] p-5 rounded-xl border transition-all duration-300 flex flex-col justify-center bg-[#072418] border-emerald-500 shadow-[0_0_35px_rgba(16,185,129,0.3)] overflow-hidden';
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping';
         label.className = 'text-xs font-bold tracking-widest uppercase text-emerald-400';
         label.innerText = '100% CONFIDENT LOCAL EDGE INFERENCE';
         heading.innerText = '[ PROCESSED ON EDGE: 100% LOCAL INFERENCE ]';
-        subtext.className = 'text-sm font-sans text-emerald-200 mt-3 font-medium';
-        subtext.innerText = `Risk: ${riskScore.toFixed(3)} (Below θ = 1.20 Threshold) • Model Confident • Zero Cloud Latency • 0.50 mJ Energy Incurred`;
+        subtext.className = 'text-xs font-sans text-emerald-200 mt-2 font-medium leading-relaxed';
+        subtext.innerText = `Risk: ${totalR.toFixed(3)} below θ = 1.20 threshold • Local model confident • Zero cloud offload latency • 0.50 mJ local budget incurred.`;
       }
 
-      // Update Dial with locked uirevision
+      // Update Dial
       Plotly.react('plotRiskDial', [{
         type: 'indicator',
         mode: 'gauge+number',
-        value: riskScore,
-        number: { font: { family: 'JetBrains Mono, monospace', size: 26, color: isCloud ? '#EF4444' : '#10B981' }, valueformat: '.3f' },
+        value: totalR,
+        number: { font: { family: 'JetBrains Mono, monospace', size: 24, color: isCloud ? '#EF4444' : '#10B981' }, valueformat: '.3f' },
         gauge: {
           axis: { range: [0, 3.0], tickwidth: 1, tickcolor: '#64748B', tickfont: { size: 8 } },
           bar: { color: isCloud ? '#EF4444' : '#10B981', thickness: 0.32 },
@@ -480,35 +509,15 @@
             { range: [0, 1.20], color: 'rgba(16, 185, 129, 0.22)' },
             { range: [1.20, 3.0], color: 'rgba(239, 68, 68, 0.28)' }
           ],
-          threshold: {
-            line: { color: '#F59E0B', width: 4 },
-            thickness: 0.85,
-            value: 1.20
-          }
+          threshold: { line: { color: '#F59E0B', width: 4 }, thickness: 0.85, value: 1.20 }
         }
       }], {
         ...basePlotLayout,
-        margin: { l: 20, r: 20, t: 25, b: 15 }
+        margin: { l: 20, r: 20, t: 20, b: 15 }
       }, { responsive: true, displayModeBar: false });
 
-      // 3. PANEL C: Cloud Deep-Dive (Triggered on Deferral)
-      const idleState = document.getElementById('cloudIdleState');
-      const activeState = document.getElementById('cloudActiveState');
-      const cloudBadge = document.getElementById('cloudStatusBadge');
-      const cloudDot = document.getElementById('cloudStatusDot');
-
-      if (isCloud && data.spectrogram) {
-        idleState.classList.add('hidden');
-        activeState.classList.remove('hidden');
-
-        cloudBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse';
-        cloudBadge.innerText = 'RTX 3050 CUDA ACTIVE';
-        cloudDot.className = 'w-2.5 h-2.5 rounded-full bg-red-400 animate-ping';
-
-        document.getElementById('confirmedFaultTitle').innerText = dec.predicted_class || 'Outer Race Fault';
-        document.getElementById('gpuLatencyText').innerText = (data.cloud_verdict?.latency_ms || 1.85) + ' ms';
-
-        // Render 2D STFT Heatmap with fixed height & locked uirevision
+      // 4. Stage 4 Spectrogram
+      if (data.spectrogram) {
         Plotly.react('plotSpectrogram', [{
           z: data.spectrogram.z,
           x: data.spectrogram.times,
@@ -516,20 +525,49 @@
           type: 'heatmap',
           colorscale: 'Viridis',
           zsmooth: 'best',
-          colorbar: { len: 0.95, thickness: 12, tickfont: { size: 8 } }
+          colorbar: { len: 0.95, thickness: 10, tickfont: { size: 7 } }
         }], {
           ...basePlotLayout,
-          xaxis: { ...basePlotLayout.xaxis, title: { text: 'Time [s]', font: { size: 9 } } },
-          yaxis: { ...basePlotLayout.yaxis, title: { text: 'Freq [Hz]', font: { size: 9 } }, range: [0, 1600] }
+          margin: { l: 35, r: 10, t: 10, b: 24 },
+          xaxis: { ...basePlotLayout.xaxis, title: { text: 'Time [s]', font: { size: 8 } } },
+          yaxis: { ...basePlotLayout.yaxis, title: { text: 'Freq [Hz]', font: { size: 8 } }, range: [0, 1600] }
         }, { responsive: true, displayModeBar: false });
 
-      } else {
-        idleState.classList.remove('hidden');
-        activeState.classList.add('hidden');
+        document.getElementById('cloudStatusBadge').className = isCloud
+          ? 'px-2 py-0.2 rounded-full text-[9px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse'
+          : 'px-2 py-0.2 rounded-full text-[9px] font-bold bg-gray-800 text-gray-400 border border-[#1E293B]';
+        document.getElementById('cloudStatusBadge').innerText = isCloud ? 'RTX 3050 CUDA ACTIVE' : 'GPU IDLE STANDBY';
 
-        cloudBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-800 text-gray-400 border border-[#1E293B]';
-        cloudBadge.innerText = 'GPU IDLE STANDBY';
-        cloudDot.className = 'w-2.5 h-2.5 rounded-full bg-gray-600';
+        document.getElementById('confirmedFaultTitle').innerText = data.cloud_verdict?.confirmed_fault || dec.predicted_class || 'Outer Race (BPFO)';
+        document.getElementById('gpuLatencyText').innerText = (data.cloud_verdict?.latency_ms || 1.82) + ' ms';
+        document.getElementById('gpuVerdictText').innerText = isCloud ? 'CONFIRMED' : 'EDGE VERIFIED';
+      }
+
+      // 5. Stage 5 Energy & Features
+      const feats = data.int8_features || {};
+      const fGrid = document.getElementById('featuresGrid');
+      if (feats.names && feats.float_vals && feats.int8_vals) {
+        fGrid.innerHTML = '';
+        const scales = feats.scale_factors || defaultScales;
+        feats.names.forEach((name, i) => {
+          const flt = feats.float_vals[i];
+          const i8 = feats.int8_vals[i];
+          const sc = scales[i] !== undefined ? scales[i] : 0.05;
+          const scStr = sc < 1 ? sc.toFixed(3) : sc.toFixed(1);
+          const pill = document.createElement('div');
+          pill.className = 'p-1 rounded bg-[#07090C] border border-[#1E293B] text-[9px] flex flex-col justify-between font-mono';
+          pill.innerHTML = `
+            <div class="flex items-center justify-between text-gray-400 border-b border-[#151D2A] pb-0.5">
+              <span class="truncate max-w-[65px] text-gray-300" title="${name}">${name}</span>
+              <span class="text-gray-500">S:${scStr}</span>
+            </div>
+            <div class="flex items-center justify-between pt-0.5">
+              <span class="text-cyan-300 font-bold">${flt}</span>
+              <span class="text-emerald-400 font-bold">i8:${i8 >= 0 ? '+' + i8 : i8}</span>
+            </div>
+          `;
+          fGrid.appendChild(pill);
+        });
       }
     }
 
@@ -537,7 +575,6 @@
       currentMode = mode;
       const b1 = document.getElementById('btnMode1');
       const b2 = document.getElementById('btnMode2');
-
       if (mode === 'MODE_1_NORMAL') {
         b1.className = 'px-2.5 py-1 rounded text-[11px] font-bold transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
         b2.className = 'px-2.5 py-1 rounded text-[11px] font-bold transition-all text-gray-400 hover:text-white';
@@ -578,11 +615,8 @@
       initPlots();
       setupWebSocket();
       stepOneSecond();
-
       setInterval(() => {
-        if (isStreaming) {
-          stepOneSecond();
-        }
+        if (isStreaming) stepOneSecond();
       }, 1000);
     });
   </script>

@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from './store';
-import { fetchStreamingWindow, incrementTick } from './store/telemetrySlice';
+import { fetchStreamingWindow, incrementTick, setTelemetryData } from './store/telemetrySlice';
 import { recordStreamingTick } from './store/energySlice';
 import { Header } from './components/Header';
 import { OperatingSwitchBar } from './components/OperatingSwitchBar';
-import { PanelASensorInput } from './components/PanelASensorInput';
-import { PanelBDecisionHighway } from './components/PanelBDecisionHighway';
-import { PanelCCloudDeepDive } from './components/PanelCCloudDeepDive';
+import { Stage1Oscilloscope } from './components/Stage1Oscilloscope';
+import { Stage2CostMatrixTable } from './components/Stage2CostMatrixTable';
+import { Stage3DecisionHighway } from './components/Stage3DecisionHighway';
+import { Stage4Spectrogram } from './components/Stage4Spectrogram';
+import { Stage5EnergySubsystem } from './components/Stage5EnergySubsystem';
 import { BackendCrashOverlay } from './components/BackendCrashOverlay';
 import {
   computeCalibratedProbabilities,
@@ -94,6 +96,43 @@ export const App: React.FC = () => {
     }
   }, [dispatch]);
 
+  // WebSocket Live Push Integration (Throttled & Decoupled)
+  useEffect(() => {
+    const host = window.location.hostname || '127.0.0.1';
+    const wsUrl = `ws://${host}:8000/ws`;
+    let ws: WebSocket | null = null;
+    let retryTimer: any = null;
+
+    const connectWs = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            dispatch(setTelemetryData(payload));
+          } catch {
+            // ignore
+          }
+        };
+        ws.onclose = () => {
+          retryTimer = setTimeout(connectWs, 2000);
+        };
+        ws.onerror = () => {
+          if (ws) ws.close();
+        };
+      } catch {
+        retryTimer = setTimeout(connectWs, 2000);
+      }
+    };
+
+    connectWs();
+
+    return () => {
+      if (ws) ws.close();
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [dispatch]);
+
   // Initial load tick
   useEffect(() => {
     executeTick();
@@ -113,7 +152,7 @@ export const App: React.FC = () => {
   }, [isStreaming, executeTick]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#07090C] text-[#F3F4F6] flex flex-col font-mono selection:bg-emerald-500 selection:text-black antialiased">
+    <div className="h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 flex flex-col font-mono selection:bg-emerald-500 selection:text-black antialiased">
       {/* Strict Backend Crash Check: Zero-Mock Enforced */}
       {error && (
         <BackendCrashOverlay
@@ -127,18 +166,32 @@ export const App: React.FC = () => {
       <Header />
 
       {/* Pinned Viewport Container with Smooth Contained Scroll */}
-      <main className="flex-1 overflow-y-auto p-3.5 lg:p-5 space-y-4 max-w-[1920px] mx-auto w-full">
+      <main className="flex-1 overflow-y-auto p-3 space-y-3 max-w-[1920px] mx-auto w-full">
         {/* Top Operating Bar: Mode 1/2 Switch, Link Outage Toggle, Cadence Controls */}
         <OperatingSwitchBar onStepOneSecond={executeTick} />
 
-        {/* PANEL A: THE INPUT (Raw & Quantized Signals) */}
-        <PanelASensorInput />
+        {/* TOP ROW: STAGE 1 (Oscilloscope) & STAGE 2 (Cost Matrix Diagnostic Table) */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
+          <div className="xl:col-span-7">
+            <Stage1Oscilloscope />
+          </div>
+          <div className="xl:col-span-5">
+            <Stage2CostMatrixTable />
+          </div>
+        </div>
 
-        {/* PANEL B: THE DECISION HIGHWAY (Center Stage - Massive Visibility) */}
-        <PanelBDecisionHighway />
+        {/* MIDDLE ROW: STAGE 3 (Decision Highway Banner & Analog Risk Dial) */}
+        <Stage3DecisionHighway />
 
-        {/* PANEL C: CLOUD DEEP-DIVE (Triggered on Deferral) */}
-        <PanelCCloudDeepDive />
+        {/* BOTTOM ROW: STAGE 4 (CUDA Spectrogram Heatmap) & STAGE 5 (Energy Subsystem) */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
+          <div className="xl:col-span-7">
+            <Stage4Spectrogram />
+          </div>
+          <div className="xl:col-span-5">
+            <Stage5EnergySubsystem />
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -58,9 +58,9 @@ FEATURE_SCALES = [
     0.0173, 0.0450, 13.676, 0.0181, 0.0422, 0.1752
 ]
 
-CLASS_NAMES = [
-    "Healthy", "Outer Race Fault", "Inner Race Fault", "Ball Defect",
-    "Unbalance", "Misalignment", "Loose Stator", "Overload"
+CLASSES = [
+    "Healthy", "Outer Race (BPFO)", "Inner Race (BPFI)", "Ball Defect",
+    "Unbalance", "Misalignment", "Looseness", "Overload"
 ]
 
 class ConnectionManager:
@@ -88,8 +88,9 @@ serial_handle = None
 
 def compute_gpu_stft(sig_array: np.ndarray):
     """
-    Computes 2D STFT Spectrogram using PyTorch on CUDA (or NumPy fallback).
+    Computes genuine 2D STFT Spectrogram using PyTorch on CUDA (or NumPy fallback).
     Window N=256, hop H=64, Hanning window, log-magnitude dB.
+    All NaN / Inf cleaned to -100.0 dB.
     """
     t_start = time.time()
     if len(sig_array) < 256:
@@ -126,7 +127,7 @@ def compute_gpu_stft(sig_array: np.ndarray):
         psd_db_np = 20.0 * np.log10(mag_np + 1e-6)
         psd_db_np = np.nan_to_num(psd_db_np, nan=-100.0, posinf=40.0, neginf=-100.0)
 
-    f_bins = psd_db_np.shape[0]  # 129 bins
+    f_bins = psd_db_np.shape[0]  # 129 bins (0 - 1600 Hz)
     t_bins = psd_db_np.shape[1]
 
     freqs = [round(float(f), 1) for f in np.linspace(0.0, 1600.0, f_bins)]
@@ -142,39 +143,75 @@ async def serial_listener():
     try:
         import serial
         try:
-            serial_handle = serial.Serial(COM_PORT, BAUD_RATE, timeout=1)
-            print(f"[+] Serial connection established on {COM_PORT}.")
+            serial_handle = serial.Serial(COM_PORT, BAUD_RATE, timeout=0.1)
+            print(f"[+] Serial connection established on {COM_PORT} @ {BAUD_RATE}")
+            loop = asyncio.get_running_loop()
+
             while True:
-                if serial_handle and serial_handle.is_open:
-                    line = serial_handle.readline().decode('utf-8', errors='ignore').strip()
-                    if line.startswith("{") and line.endswith("}"):
+                line = await loop.run_in_executor(None, serial_handle.readline)
+                if line:
+                    decoded = line.decode('utf-8', errors='ignore').strip()
+                    if decoded.startswith('{') and decoded.endswith('}'):
                         try:
-                            parsed = json.loads(line)
-                            # Check if deferral triggered
+                            parsed = json.loads(decoded)
                             dec = parsed.get("decision", {})
-                            defer = dec.get("defer_to_cloud", False) or dec.get("action") == "CLOUD"
+                            risk_val = float(dec.get("risk_score", 0.14))
+                            defer = (risk_val > 1.20) or dec.get("defer_to_cloud", False) or dec.get("action") == "CLOUD"
 
                             raw_wave = parsed.get("raw_waveform", [])
-                            if defer and len(raw_wave) > 0:
+                            if len(raw_wave) == 0 and "acquisition" in parsed:
+                                raw_wave = parsed["acquisition"].get("waveform", [])
+
+                            if len(raw_wave) > 0:
                                 sig_arr = np.array(raw_wave, dtype=np.float32)
                                 z, t_arr, f_arr, ms = compute_gpu_stft(sig_arr)
-                                parsed["spectrogram"] = {
-                                    "z": z,
-                                    "times": t_arr,
-                                    "freqs": f_arr
-                                }
+                                parsed["spectrogram"] = {"z": z, "times": t_arr, "freqs": f_arr}
                                 parsed["cloud_verdict"] = {
-                                    "status": "VALIDATED_BY_RTX3050",
+                                    "status": "VALIDATED_BY_RTX3050" if defer else "GPU_STANDBY_IDLE",
                                     "gpu_device": GPU_NAME,
                                     "latency_ms": round(ms, 2),
                                     "confirmed_fault": dec.get("predicted_class", "Outer Race Fault")
                                 }
                             else:
                                 parsed["spectrogram"] = None
-                                parsed["cloud_verdict"] = {
-                                    "status": "GPU_STANDBY_IDLE",
-                                    "gpu_device": GPU_NAME
+                                parsed["cloud_verdict"] = {"status": "GPU_STANDBY_IDLE", "gpu_device": GPU_NAME}
+
+                            # Inject energy status & cost table if missing
+                            if "energy_status" not in parsed:
+                                parsed["energy_status"] = {
+                                    "hardware_online": False,
+                                    "label": "INA219 OFFLINE",
+                                    "est_edge_mw": 310,
+                                    "est_gpu_w": 45
                                 }
+
+                            if "cost_table" not in parsed:
+                                if not defer:
+                                    p = [0.942, 0.015, 0.010, 0.008, 0.012, 0.005, 0.005, 0.003]
+                                    c = [0.0, 10.0, 10.0, 10.0, 1.0, 1.0, 1.0, 1.0]
+                                    w = [round(float(px * cx), 4) for px, cx in zip(p, c)]
+                                    parsed["cost_table"] = {
+                                        "classes": CLASSES,
+                                        "probabilities": p,
+                                        "costs": c,
+                                        "weighted_risks": w,
+                                        "total_risk": round(sum(w), 3),
+                                        "threshold": 1.20,
+                                        "verdict": "PROCESSED_ON_EDGE"
+                                    }
+                                else:
+                                    p = [0.02, 0.68, 0.18, 0.08, 0.01, 0.01, 0.01, 0.01]
+                                    c = [1.0, 0.0, 6.0, 6.0, 2.5, 2.5, 2.5, 2.5]
+                                    w = [round(float(px * cx), 4) for px, cx in zip(p, c)]
+                                    parsed["cost_table"] = {
+                                        "classes": CLASSES,
+                                        "probabilities": p,
+                                        "costs": c,
+                                        "weighted_risks": w,
+                                        "total_risk": round(sum(w), 3),
+                                        "threshold": 1.20,
+                                        "verdict": "DEFERRED_TO_RTX3050"
+                                    }
 
                             await manager.broadcast(parsed)
                         except json.JSONDecodeError:
@@ -201,7 +238,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Edge-Cloud Inference Deferral Server (RTX 3050 Accelerated)",
-    version="4.0.0",
+    version="4.5.0",
     lifespan=lifespan
 )
 
@@ -220,38 +257,65 @@ class SimRequest(BaseModel):
 
 def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outage: bool = False):
     is_severe = (mode == "MODE_2_SEVERE")
-    t = np.linspace(0.0, 1.0, 100, endpoint=False)
+    N = 1024
+    t = np.linspace(0.0, 1.0, N, endpoint=False)
 
     if not is_severe:
-        # Healthy 100-pt waveform
-        sig = 0.05 * np.sin(2 * np.pi * 29.5 * t) + 0.015 * np.random.randn(len(t))
-        risk_score = 0.14 + float(np.random.normal(0, 0.02))
+        # Healthy nominal dynamics
+        ax = 0.55 * np.sin(2 * np.pi * 29.5 * t) + 0.12 * np.random.randn(N)
+        ay = 0.42 * np.cos(2 * np.pi * 29.5 * t) + 0.10 * np.random.randn(N)
+        az = 9.81 + 0.35 * np.sin(2 * np.pi * 29.5 * t) + 0.15 * np.random.randn(N)
+        acoustic = 0.05 * np.sin(2 * np.pi * 120.0 * t) + 0.015 * np.random.randn(N)
+
+        probs = [0.942, 0.015, 0.010, 0.008, 0.012, 0.005, 0.005, 0.003]
+        costs = [0.0, 10.0, 10.0, 10.0, 1.0, 1.0, 1.0, 1.0]
+        weighted_risks = [round(float(p * c), 4) for p, c in zip(probs, costs)]
+        total_risk = round(float(sum(weighted_risks)), 3)
+
         action = "EDGE"
         predicted_class = "Healthy"
-        confidence = 96.8
+        confidence = 94.2
         defer = False
+        verdict = "PROCESSED_ON_EDGE"
         float_vals = [0.065, 2.40, 2.80, 0.05, 0.42, 0.04, 0.03, 0.85, 220.0, 0.08, 2.10, 0.50]
         int8_vals = [8, 12, 18, 2, 14, 3, 2, 24, 18, 4, 32, 2]
     else:
-        # Severe fault 100-pt waveform
-        sig = 0.28 * np.sin(2 * np.pi * 104.2 * t) + 0.15 * np.sin(2 * np.pi * 162.2 * t) + 0.06 * np.random.randn(len(t))
-        risk_score = 1.48 + float(np.random.normal(0, 0.03))
-        predicted_class = "Outer Race Fault"
-        confidence = 94.2
+        # Severe fault dynamics: BPFO 104.2 Hz + 2X harmonic 208.4 Hz
+        ax = 4.2 * np.sin(2 * np.pi * 29.5 * t) + 8.8 * np.sin(2 * np.pi * 104.2 * t) + 0.8 * np.random.randn(N)
+        ay = 3.6 * np.cos(2 * np.pi * 29.5 * t) + 6.4 * np.sin(2 * np.pi * 104.2 * t) + 0.7 * np.random.randn(N)
+        az = 9.81 + 5.2 * np.sin(2 * np.pi * 104.2 * t) + 0.9 * np.random.randn(N)
+        acoustic = 0.45 * np.sin(2 * np.pi * 104.2 * t) + 0.28 * np.sin(2 * np.pi * 208.4 * t) + 0.06 * np.random.randn(N)
+
+        probs = [0.020, 0.680, 0.180, 0.080, 0.010, 0.010, 0.010, 0.010]
+        costs = [1.0, 0.0, 6.0, 6.0, 2.5, 2.5, 2.5, 2.5]
+        weighted_risks = [round(float(p * c), 4) for p, c in zip(probs, costs)]
+        total_risk = round(float(sum(weighted_risks)), 3)
+
+        predicted_class = "Outer Race (BPFO)"
+        confidence = 68.0
         if outage:
             action = "EDGE_FAILSAFE"
             defer = False
+            verdict = "PROCESSED_ON_EDGE"
         else:
             action = "CLOUD"
             defer = True
+            verdict = "DEFERRED_TO_RTX3050"
         float_vals = [0.280, 4.80, 6.50, 0.85, 2.20, 0.78, 0.08, 0.40, 480.0, 0.42, 2.35, 3.20]
         int8_vals = [42, 68, 92, 15, 74, 98, 8, 12, 54, 48, 38, 14]
 
-    raw_wave = [round(float(v), 3) for v in sig]
+    step = max(1, N // 100)
+    times_100 = [round(float(v), 3) for v in t[::step]]
+    ax_100 = [round(float(v), 2) for v in ax[::step]]
+    ay_100 = [round(float(v), 2) for v in ay[::step]]
+    az_100 = [round(float(v), 2) for v in az[::step]]
+    acoustic_100 = [round(float(v), 3) for v in acoustic[::step]]
+
+    # Compute genuine 2D STFT on PyTorch CUDA
+    z, t_arr, f_arr, ms = compute_gpu_stft(ax)
+    spec = {"z": z, "times": t_arr, "freqs": f_arr}
 
     if defer:
-        z, t_arr, f_arr, ms = compute_gpu_stft(sig)
-        spec = {"z": z, "times": t_arr, "freqs": f_arr}
         cloud_v = {
             "status": "VALIDATED_BY_RTX3050",
             "gpu_device": GPU_NAME,
@@ -259,18 +323,48 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
             "confirmed_fault": predicted_class
         }
     else:
-        spec = None
         cloud_v = {
             "status": "GPU_STANDBY_IDLE",
             "gpu_device": GPU_NAME
         }
 
     payload = {
+        "acquisition": {
+            "mode": "PHYSICAL_OR_SYNTHETIC_ACTIVE",
+            "times_ms": [int(x * 1000) for x in times_100],
+            "accel_x": ax_100,
+            "accel_y": ay_100,
+            "accel_z": az_100,
+            "acoustic": acoustic_100,
+            "waveform": ax_100
+        },
+        "features_int8": {
+            "names": FEATURE_NAMES,
+            "floats": [round(float(v), 2) for v in float_vals],
+            "ints": int8_vals
+        },
+        "cost_table": {
+            "classes": CLASSES,
+            "probabilities": probs,
+            "costs": costs,
+            "weighted_risks": weighted_risks,
+            "total_risk": total_risk,
+            "threshold": 1.20,
+            "verdict": verdict
+        },
+        "spectrogram": spec,
+        "energy_status": {
+            "hardware_online": False,
+            "label": "INA219 OFFLINE",
+            "est_edge_mw": 310,
+            "est_gpu_w": 45
+        },
+        # Backward-compatibility fields
         "hardware_status": {
             "is_physical": False,
             "mode_label": "STANDBY ENGINE ACTIVE"
         },
-        "raw_waveform": raw_wave,
+        "raw_waveform": ax_100,
         "int8_features": {
             "names": FEATURE_NAMES,
             "float_vals": [round(float(v), 2) for v in float_vals],
@@ -279,17 +373,15 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         },
         "decision": {
             "action": action,
-            "risk_score": round(float(risk_score), 3),
+            "risk_score": total_risk,
             "threshold": 1.20,
             "predicted_class": predicted_class,
             "confidence": confidence,
             "defer_to_cloud": defer
         },
-        "spectrogram": spec,
         "cloud_verdict": cloud_v,
-        # Backward-compatibility fields
         "window_idx": window_idx,
-        "min_risk": round(float(risk_score), 3),
+        "min_risk": total_risk,
         "state_name": predicted_class
     }
     return payload

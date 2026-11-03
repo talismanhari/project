@@ -26,6 +26,33 @@ export interface CloudVerdict {
   confirmed_fault?: string;
 }
 
+export interface CostTablePayload {
+  classes: string[];
+  probabilities: number[];
+  costs: number[];
+  weighted_risks: number[];
+  total_risk: number;
+  threshold: number;
+  verdict: string;
+}
+
+export interface EnergyStatusPayload {
+  hardware_online: boolean;
+  label: string;
+  est_edge_mw: number;
+  est_gpu_w: number;
+}
+
+export interface AcquisitionPayload {
+  mode: string;
+  times_ms?: number[];
+  accel_x?: number[];
+  accel_y?: number[];
+  accel_z?: number[];
+  acoustic?: number[];
+  waveform?: number[];
+}
+
 export interface QuantizationRecord {
   name: string;
   label: string;
@@ -67,6 +94,14 @@ export interface TelemetryPayload {
   ina219_trace?: Ina219Trace;
   hardware_status?: HardwareStatus;
   int8_features?: Int8Features;
+  features_int8?: {
+    names: string[];
+    floats: number[];
+    ints: number[];
+  };
+  acquisition?: AcquisitionPayload;
+  cost_table?: CostTablePayload;
+  energy_status?: EnergyStatusPayload;
   decision?: DecisionPayload;
   cloud_verdict?: CloudVerdict;
   min_risk?: number;

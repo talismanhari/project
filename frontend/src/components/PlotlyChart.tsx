@@ -17,82 +17,91 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
   style = {},
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const dataRef = useRef(data);
+  const layoutRef = useRef(layout);
+  const configRef = useRef(config);
+  const frameIdRef = useRef<number | null>(null);
+
+  dataRef.current = data;
+  layoutRef.current = layout;
+  configRef.current = config;
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const baseLayout: Partial<Plotly.Layout> = {
-      uirevision: 'SCADA_LOCKED',
-      autosize: true,
-      paper_bgcolor: '#0B0F19',
-      plot_bgcolor: '#101622',
-      font: {
-        family: 'JetBrains Mono, Courier New, monospace',
-        color: '#9CA3AF',
-        size: 9,
-      },
-      margin: { l: 45, r: 15, t: 28, b: 34 },
-      showlegend: false,
-      xaxis: {
-        showgrid: true,
-        gridcolor: '#1E293B',
-        zerolinecolor: '#334155',
-        tickcolor: '#475569',
-        showline: true,
-        linecolor: '#334155',
-        ticks: 'outside',
-        ...layout.xaxis,
-      },
-      yaxis: {
-        showgrid: true,
-        gridcolor: '#1E293B',
-        zerolinecolor: '#334155',
-        tickcolor: '#475569',
-        showline: true,
-        linecolor: '#334155',
-        ticks: 'outside',
-        ...layout.yaxis,
-      },
-      ...layout,
-    };
+    if (frameIdRef.current !== null) {
+      cancelAnimationFrame(frameIdRef.current);
+    }
 
-    const baseConfig: Partial<Plotly.Config> = {
-      responsive: true,
-      displayModeBar: false,
-      displaylogo: false,
-      ...config,
-    };
+    // Throttle rendering via requestAnimationFrame to screen refresh rate (30-60 FPS)
+    frameIdRef.current = requestAnimationFrame(() => {
+      if (!containerRef.current) return;
 
-    // Decouple rendering from synchronous React DOM tree updates to eliminate scroll jitter
-    const rafId = requestAnimationFrame(() => {
-      if (containerRef.current) {
-        Plotly.react(containerRef.current, data, baseLayout, baseConfig);
-      }
+      const baseLayout: Partial<Plotly.Layout> = {
+        uirevision: 'constant',
+        autosize: true,
+        paper_bgcolor: '#0B0F19',
+        plot_bgcolor: '#101622',
+        font: {
+          family: 'JetBrains Mono, Courier New, monospace',
+          color: '#9CA3AF',
+          size: 9,
+        },
+        margin: { l: 45, r: 15, t: 25, b: 25 },
+        showlegend: false,
+        xaxis: {
+          showgrid: true,
+          gridcolor: '#1E293B',
+          zerolinecolor: '#334155',
+          tickcolor: '#475569',
+          showline: true,
+          linecolor: '#334155',
+          ...layoutRef.current.xaxis,
+        },
+        yaxis: {
+          showgrid: true,
+          gridcolor: '#1E293B',
+          zerolinecolor: '#334155',
+          tickcolor: '#475569',
+          showline: true,
+          linecolor: '#334155',
+          ...layoutRef.current.yaxis,
+        },
+        ...layoutRef.current,
+      };
+
+      const baseConfig: Partial<Plotly.Config> = {
+        responsive: true,
+        displayModeBar: false,
+        displaylogo: false,
+        staticPlot: false,
+        ...configRef.current,
+      };
+
+      Plotly.react(containerRef.current, dataRef.current, baseLayout, baseConfig);
     });
 
-    const handleResize = () => {
-      if (containerRef.current) {
-        Plotly.Plots.resize(containerRef.current);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-
     return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', handleResize);
+      if (frameIdRef.current !== null) {
+        cancelAnimationFrame(frameIdRef.current);
+      }
     };
   }, [data, layout, config]);
 
-  // Safe purge when unmounting
   useEffect(() => {
     const el = containerRef.current;
+    const handleResize = () => {
+      if (el) Plotly.Plots.resize(el);
+    };
+    window.addEventListener('resize', handleResize);
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (el) {
         try {
           Plotly.purge(el);
         } catch {
-          // ignore purge on unmount
+          // ignore
         }
       }
     };

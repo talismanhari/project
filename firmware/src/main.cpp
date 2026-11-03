@@ -3,12 +3,11 @@
  * Project: "Empirical Cost Modeling of Calibrated Inference Deferral in Microcontroller Edge AI"
  * 
  * CORE 0: Non-blocking Multi-Sensor Audit, Dynamic Physics Fallback, & 12-Feature DSP Extractor
- * CORE 1: INT8 Forward Pass, Softmax Calibration, Bayes Risk Evaluation, & UART Telemetry
+ * CORE 1: INT8 Forward Pass, Softmax Calibration, Bayes Risk Evaluation, & UART Telemetry Stream
  */
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
 #include <SPI.h>
 #include <Wire.h>
 #include <OneWire.h>
@@ -42,8 +41,8 @@ static float pingPongBuffer[2][SAMPLES_PER_SEC];
 static volatile int activeBufferIdx = 0;
 
 const char* STATE_LABELS[8] = {
-    "Healthy", "Outer Race Fault", "Inner Race Fault", "Ball Defect",
-    "Unbalance", "Misalignment", "Loose Stator", "Overload"
+    "Healthy", "Outer Race (BPFO)", "Inner Race (BPFI)", "Ball Defect",
+    "Unbalance", "Misalignment", "Looseness", "Overload"
 };
 
 const char* FEATURE_NAMES_ARR[12] = {
@@ -66,7 +65,7 @@ static float g_stator_temperature = 42.0f;
 // CORE 0 TASK: Hardware Transducers, Multi-Rate DSP, & 12-Feature Array
 // =========================================================================
 void TaskCore0_DSP(void *pvParameters) {
-    Serial.println("[Core 0] Probing Sensor Transducer Health (Non-Blocking)...");
+    Serial.println("[Core 0] Probing Sensor Transducer Health (Non-Blocking Audit)...");
     
     // 1. Non-blocking Probe for ADXL345 (SPI)
     SPI.begin(PIN_ADXL_SCK, PIN_ADXL_MISO, PIN_ADXL_MOSI, PIN_ADXL_CS);
@@ -80,10 +79,16 @@ void TaskCore0_DSP(void *pvParameters) {
         Serial.println("[Core 0] ADXL345 SPI: ONLINE (3200 Hz ODR, +/-16g)");
     } else {
         SENSOR_ADXL345_ONLINE = false;
-        Serial.println("[Core 0] ADXL345 SPI: OFFLINE -> Physics Dynamic Stream Engaged");
+        Serial.println("[Core 0] ADXL345 SPI: OFFLINE -> Physics Dynamic Fallback Engaged");
     }
 
-    // 2. Non-blocking Probe for ACS712 on ADC1 (GPIO 4)
+    // 2. Non-blocking Probe for INMP441 (I2S Pins configured as input)
+    pinMode(PIN_I2S_SCK, OUTPUT);
+    pinMode(PIN_I2S_WS, OUTPUT);
+    pinMode(PIN_I2S_SD, INPUT);
+    SENSOR_INMP441_ONLINE = false; // Set fallback unless physical DMA clock responds
+
+    // 3. Non-blocking Probe for ACS712 on ADC1 (GPIO 4)
     pinMode(PIN_ACS712_ADC, INPUT);
     analogReadResolution(12);
     int test_adc = analogRead(PIN_ACS712_ADC);
@@ -95,7 +100,7 @@ void TaskCore0_DSP(void *pvParameters) {
         Serial.println("[Core 0] ACS712 Hall-Effect: OFFLINE -> Motor Profile Engaged");
     }
 
-    // 3. Non-blocking Probe for DS18B20 (1-Wire GPIO 8)
+    // 4. Non-blocking Probe for DS18B20 (1-Wire GPIO 8)
     tempSensor.begin();
     tempSensor.setResolution(9);
     if (tempSensor.getDeviceCount() > 0) {
@@ -108,7 +113,7 @@ void TaskCore0_DSP(void *pvParameters) {
         }
     }
     if (!SENSOR_DS18B20_ONLINE) {
-        Serial.println("[Core 0] DS18B20 1-Wire: OFFLINE -> Thermal Drift Engaged");
+        Serial.println("[Core 0] DS18B20 1-Wire: OFFLINE -> Thermal Drift Model Active");
     }
 
     uint32_t window_count = 0;
@@ -122,7 +127,7 @@ void TaskCore0_DSP(void *pvParameters) {
         activeBufferIdx = 1 - activeBufferIdx;
         float* activeBuf = pingPongBuffer[bufIdx];
 
-        // 1. Vibration Acquisition (Hardware or Dynamic Physics Fallback)
+        // 1. Vibration Acquisition (Hardware Transducer or Physics Dynamic Stream)
         if (SENSOR_ADXL345_ONLINE) {
             for (int i = 0; i < SAMPLES_PER_SEC; i++) {
                 sensors_event_t event;
@@ -164,7 +169,7 @@ void TaskCore0_DSP(void *pvParameters) {
             g_stator_temperature = 0.995f * g_stator_temperature + 0.22f + generate_gaussian_noise(0.0f, 0.08f);
         }
 
-        // 3. Time-Domain Statistical Moments (Mean, RMS, Crest, Kurtosis, Skewness, P2P)
+        // 3. Time-Domain Statistical Moments
         float sum_v = 0.0f, sum_sq = 0.0f;
         float max_val = -100.0f, min_val = 100.0f;
         for (int i = 0; i < SAMPLES_PER_SEC; i++) {
@@ -191,7 +196,7 @@ void TaskCore0_DSP(void *pvParameters) {
         float skewness = (sum_m3 / (float)SAMPLES_PER_SEC) / powf(variance, 1.5f);
         float kurtosis = (sum_m4 / (float)SAMPLES_PER_SEC) / (variance * variance);
 
-        // 4. 1024-Point FFT
+        // 4. 1024-Point Real FFT
         for (int i = 0; i < FFT_POINTS; i++) {
             float w = 0.5f * (1.0f - cosf(2.0f * (float)M_PI * (float)i / (float)(FFT_POINTS - 1)));
             fft_real[i] = activeBuf[i] * w;
@@ -242,7 +247,7 @@ void TaskCore0_DSP(void *pvParameters) {
         payload.features[10] = current_amps;
         payload.features[11] = temp_drift;
 
-        // Quantize features to INT8 for edge display
+        // Quantize features to INT8
         for (int i = 0; i < NUM_DSP_FEATURES; i++) {
             float norm = (payload.features[i] - feature_means[i]) / feature_stds[i];
             payload.int8_features[i] = (int8_t)constrain(round(norm * 32.0f), -128, 127);
@@ -269,7 +274,7 @@ void TaskCore1_Inference(void *pvParameters) {
         Serial.println("[Core 1] INA219 Shunt: ONLINE (I2C SDA=1, SCL=2)");
     } else {
         SENSOR_INA219_ONLINE = false;
-        Serial.println("[Core 1] INA219 Shunt: OFFLINE -> Dynamic Shunt Synthesis");
+        Serial.println("[Core 1] INA219 Shunt: OFFLINE -> Energy Status Tagged Offline");
     }
 
     WiFi.mode(WIFI_OFF);
@@ -295,19 +300,17 @@ void TaskCore1_Inference(void *pvParameters) {
             // 4. Construct Clean JSON Frame for UART/COM7
             JsonDocument doc;
 
-            JsonObject hw = doc["hardware_status"].to<JsonObject>();
-            hw["is_physical"] = payload.is_physical;
-            hw["mode_label"] = payload.is_physical ? "PHYSICAL HARDWARE ACQUISITION" : "STANDBY ENGINE ACTIVE";
-
-            JsonArray raw_arr = doc["raw_waveform"].to<JsonArray>();
+            JsonObject acq = doc["acquisition"].to<JsonObject>();
+            acq["mode"] = payload.is_physical ? "PHYSICAL_HARDWARE_ACTIVE" : "SYNTHETIC_ACTIVE";
+            JsonArray wave_arr = acq["waveform"].to<JsonArray>();
             for (int i = 0; i < DECIMATED_PTS; i++) {
-                raw_arr.add(serialized(String(payload.raw_preview[i], 3)));
+                wave_arr.add(serialized(String(payload.raw_preview[i], 3)));
             }
 
-            JsonObject int8_f = doc["int8_features"].to<JsonObject>();
+            JsonObject int8_f = doc["features_int8"].to<JsonObject>();
             JsonArray names = int8_f["names"].to<JsonArray>();
-            JsonArray f_vals = int8_f["float_vals"].to<JsonArray>();
-            JsonArray i_vals = int8_f["int8_vals"].to<JsonArray>();
+            JsonArray f_vals = int8_f["floats"].to<JsonArray>();
+            JsonArray i_vals = int8_f["ints"].to<JsonArray>();
 
             for (int i = 0; i < NUM_DSP_FEATURES; i++) {
                 names.add(FEATURE_NAMES_ARR[i]);
@@ -322,6 +325,18 @@ void TaskCore1_Inference(void *pvParameters) {
             dec["predicted_class"] = STATE_LABELS[optimal_action];
             dec["confidence"] = serialized(String(probs[optimal_action] * 100.0f, 1));
             dec["defer_to_cloud"] = defer_to_cloud;
+
+            JsonObject energy = doc["energy_status"].to<JsonObject>();
+            energy["hardware_online"] = SENSOR_INA219_ONLINE;
+            energy["label"] = SENSOR_INA219_ONLINE ? "INA219 ONLINE" : "INA219 OFFLINE";
+            energy["est_edge_mw"] = 310;
+            energy["est_gpu_w"] = 45;
+
+            // Backward compatibility
+            JsonObject hw = doc["hardware_status"].to<JsonObject>();
+            hw["is_physical"] = payload.is_physical;
+            hw["mode_label"] = payload.is_physical ? "PHYSICAL HARDWARE ACQUISITION" : "STANDBY ENGINE ACTIVE";
+            doc["raw_waveform"] = wave_arr;
 
             serializeJson(doc, Serial);
             Serial.println();

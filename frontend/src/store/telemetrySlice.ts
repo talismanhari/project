@@ -89,6 +89,11 @@ export const telemetrySlice = createSlice({
     setMathDrawerOpen: (state, action: PayloadAction<boolean>) => {
       state.isMathDrawerOpen = action.payload;
     },
+    setTelemetryData: (state, action: PayloadAction<TelemetryPayload>) => {
+      state.telemetryData = action.payload;
+      state.isLoading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -119,6 +124,7 @@ export const {
   setOutageFailSafe,
   toggleMathDrawer,
   setMathDrawerOpen,
+  setTelemetryData,
 } = telemetrySlice.actions;
 
 export default telemetrySlice.reducer;
