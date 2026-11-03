@@ -1,48 +1,43 @@
 import os
+import sys
 import time
 import json
 import asyncio
+import signal
 from typing import List, Optional
+from contextlib import asynccontextmanager
 import numpy as np
-from scipy import signal
 import torch
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-app = FastAPI(title="Edge-Cloud Inference Deferral Server (RTX 3050 Accelerated)", version="3.0.0")
+# Configuration from Environment Variables (Zero Hardcoded Secrets)
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8000"))
+COM_PORT = os.getenv("ESP32_COM_PORT", "COM7")
+BAUD_RATE = int(os.getenv("ESP32_BAUD_RATE", "115200"))
+FORCE_DEVICE = os.getenv("DEVICE", "auto")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if FORCE_DEVICE == "cpu":
+    DEVICE = "cpu"
+elif FORCE_DEVICE == "cuda" and torch.cuda.is_available():
+    DEVICE = "cuda"
+else:
+    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Hardware acceleration check (Lenovo LOQ NVIDIA GeForce RTX 3050 Laptop GPU)
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-GPU_NAME = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "Host CPU (Float32)"
-print(f"============================================================")
-print(f"[*] Cloud Validation Engine Initialized on: {DEVICE.upper()} ({GPU_NAME})")
-print(f"============================================================")
+GPU_NAME = torch.cuda.get_device_name(0) if (DEVICE == "cuda" and torch.cuda.is_available()) else "Host CPU (Float32)"
+
+print("============================================================")
+print(f"[*] Cloud Validation Engine: {DEVICE.upper()} ({GPU_NAME})")
+print(f"[*] COM Port Monitor Target: {COM_PORT} @ {BAUD_RATE} baud")
+print("============================================================")
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
-
-STATE_NAMES = [
-    "Normal",
-    "Mild Imbalance",
-    "Severe Imbalance",
-    "Misalignment",
-    "Looseness",
-    "Inner Race Fault",
-    "Outer Race Fault",
-    "Ball Fault"
-]
 
 class ConnectionManager:
     def __init__(self):
@@ -64,6 +59,64 @@ class ConnectionManager:
                 self.disconnect(connection)
 
 manager = ConnectionManager()
+serial_task = None
+serial_handle = None
+
+async def serial_listener():
+    """Optional background listener for COM7 frames emitted by ESP32-S3."""
+    global serial_handle
+    try:
+        import serial  # pyserial
+        try:
+            serial_handle = serial.Serial(COM_PORT, BAUD_RATE, timeout=1)
+            print(f"[+] Serial connection established on {COM_PORT}.")
+            while True:
+                if serial_handle and serial_handle.is_open:
+                    line = serial_handle.readline().decode('utf-8', errors='ignore').strip()
+                    if line.startswith("{") and line.endswith("}"):
+                        try:
+                            parsed = json.loads(line)
+                            parsed["event_type"] = "SERIAL_FRAME"
+                            await manager.broadcast(parsed)
+                        except json.JSONDecodeError:
+                            pass
+                await asyncio.sleep(0.01)
+        except Exception as e:
+            print(f"[*] Note: COM port {COM_PORT} not opened ({e}). Running HTTP & Simulated Relay mode.")
+    except ImportError:
+        print("[*] Note: pyserial not installed. Skipping direct COM port polling.")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Launch optional COM port reader task
+    task = asyncio.create_task(serial_listener())
+    yield
+    # Shutdown: Release GPU VRAM and close handles cleanly
+    task.cancel()
+    global serial_handle
+    if serial_handle and serial_handle.is_open:
+        try:
+            serial_handle.close()
+            print("[*] Serial handle closed.")
+        except Exception:
+            pass
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        print("[*] GPU VRAM released cleanly.")
+
+app = FastAPI(
+    title="Edge-Cloud Inference Deferral Server (RTX 3050 Accelerated)",
+    version="3.1.0",
+    lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class OffloadPayload(BaseModel):
     device_id: Optional[str] = "ESP32_S3_PROD_01"
@@ -75,12 +128,11 @@ class OffloadPayload(BaseModel):
     raw_waveform: List[float]  # 800-point decimated buffer
 
 def compute_gpu_stft(sig_array: np.ndarray):
-    """Computes 2D STFT Spectrogram using PyTorch GPU acceleration."""
+    """Computes 2D STFT Spectrogram using PyTorch acceleration."""
     t_start = time.time()
     tensor_sig = torch.tensor(sig_array, dtype=torch.float32, device=DEVICE)
     window = torch.hann_window(128, device=DEVICE)
     
-    # 1D STFT
     stft_res = torch.stft(
         tensor_sig,
         n_fft=128,
@@ -90,12 +142,10 @@ def compute_gpu_stft(sig_array: np.ndarray):
         return_complex=True
     )
     
-    # Power spectral magnitude (dB)
     mag = torch.abs(stft_res)
     psd_db = 20.0 * torch.log10(mag + 1e-8)
-    
-    # Return to CPU / Numpy for JSON serialization
     psd_db_np = psd_db.cpu().numpy()
+    
     f_bins = psd_db_np.shape[0]
     t_bins = psd_db_np.shape[1]
     
@@ -112,19 +162,16 @@ def health():
         "status": "online",
         "device": DEVICE,
         "gpu_name": GPU_NAME,
+        "com_target": COM_PORT,
         "target_model": "ResNet-50 2D-CNN Spectrogram Classifier (Cloud Secondary)",
     }
 
 @app.post("/offload")
 async def receive_offload(payload: OffloadPayload):
-    """
-    Endpoint invoked by ESP32-S3 Core 1 when Risk >= 1.20
-    """
+    """Endpoint invoked by ESP32-S3 Core 1 when Risk >= 1.20."""
     raw_arr = np.array(payload.raw_waveform, dtype=np.float32)
     z_matrix, times, freqs, stft_ms = compute_gpu_stft(raw_arr)
     
-    # Cloud Secondary Deep Model Inference
-    # High capacity 2D classification with >99.8% precision
     definitive_state = payload.local_hypothesis
     if "Outer" in definitive_state or "Severe" in definitive_state:
         definitive_state = "Outer Race Fault (Definitive BPFO Harmonic)"
@@ -155,7 +202,6 @@ async def receive_offload(payload: OffloadPayload):
         "features": payload.features
     }
 
-    # Broadcast live event to SCADA dashboard via WebSockets
     await manager.broadcast(event_data)
 
     return {
@@ -172,19 +218,19 @@ class SimRequest(BaseModel):
 
 @app.post("/simulate_cycle")
 async def simulate_cycle(req: SimRequest):
-    """Provides full simulation stream for Windows dashboard verification."""
+    """Provides full simulation stream for dashboard validation."""
     w_idx = req.window_idx
     is_severe = (req.mode == "MODE_2_SEVERE")
     t = np.linspace(0.0, 1.0, 800, endpoint=False)
     
     if not is_severe:
-        sig = 0.05 * np.sin(2 * np.pi * 29.95 * t) + 0.015 * np.random.randn(len(t))
+        sig = 0.05 * np.sin(2 * np.pi * 29.5 * t) + 0.015 * np.random.randn(len(t))
         state = "Normal Operation (Continuous)"
         min_risk = 0.142 + np.random.normal(0, 0.01)
         decision = "KEEP_LOCAL"
         energy_mj = 0.504 + np.random.normal(0, 0.02)
     else:
-        sig = (0.28 * np.sin(2 * np.pi * 107.4 * t) + 
+        sig = (0.28 * np.sin(2 * np.pi * 104.2 * t) + 
                0.22 * np.sin(2 * np.pi * 162.2 * t) + 
                0.08 * np.random.randn(len(t)))
         state = "Severe Outer/Inner Race Fault"
@@ -196,7 +242,6 @@ async def simulate_cycle(req: SimRequest):
             decision = "OFFLOAD_CLOUD"
             energy_mj = 1500.0
 
-    # 1024-pt FFT
     fft_vals = np.abs(np.fft.rfft(sig * np.hanning(len(sig)))) / len(sig)
     freqs = np.fft.rfftfreq(len(sig), 1.0 / 3200.0)
     psd_db = (20.0 * np.log10(fft_vals + 1e-9)).tolist()
@@ -239,10 +284,10 @@ def get_dashboard():
     index_path = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    return {"message": "Cloud Dashboard static index.html not yet initialized."}
+    return {"message": "Cloud Dashboard index.html not found."}
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=HOST, port=PORT)

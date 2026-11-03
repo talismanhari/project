@@ -173,7 +173,7 @@ export const OperatingSwitchBar: React.FC<OperatingSwitchBarProps> = ({ onStepOn
             </div>
           </button>
 
-          {/* 1 Hz Cadence & Jury Step Controls */}
+          {/* 1 Hz Cadence & Manual Step Controls */}
           <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1E293B] flex flex-col justify-between">
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-gray-400 flex items-center gap-1.5">
@@ -216,7 +216,7 @@ export const OperatingSwitchBar: React.FC<OperatingSwitchBarProps> = ({ onStepOn
 
               <button
                 onClick={onStepOneSecond}
-                title="Step 1 Second Forward (Jury Inspection Mode)"
+                title="Step 1 Second Forward (Manual Inspection Mode)"
                 className="px-2 py-1 rounded border border-[#1E293B] bg-[#101622] hover:bg-[#151D2A] text-cyan-300 text-[11px] font-bold flex items-center gap-1 transition-colors"
               >
                 <StepForward className="w-3 h-3" />

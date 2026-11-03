@@ -1,10 +1,16 @@
+# Environment and Secrets
+.env
+*.env
+*.log
+
 # Python
-venv/
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+.venv/
+venv/
 env/
 build/
 develop-eggs/
@@ -22,6 +28,11 @@ wheels/
 .installed.cfg
 *.egg
 
+# Binary & Archives
+*.bin
+*.tar.gz
+*.zip
+
 # Frontend
 frontend/node_modules/
 frontend/dist/
@@ -32,12 +43,14 @@ frontend/.vite/
 .pioenvs/
 .piolibdeps/
 firmware/.pio/
+firmware/.pioenvs/
+firmware/.piolibdeps/
 
 # Pipeline generated artifacts
 ml_pipeline/data/*.npz
 ml_pipeline/data/*.csv
 
-# OS / Editor
+# OS & IDE
 .DS_Store
 *.swp
 *.swo

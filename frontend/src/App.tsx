@@ -127,7 +127,7 @@ export const App: React.FC = () => {
 
       {/* Main Streaming Workbench Layout matching Slide 5 & 6 */}
       <main className="flex-1 p-3.5 lg:p-5 space-y-3.5 max-w-[1920px] mx-auto w-full">
-        {/* STAGE 4: 2-MODE SWITCH + WI-FI OUTAGE FAIL-SAFE TOGGLE + JURY STEP CONTROLS */}
+        {/* STAGE 4: 2-MODE SWITCH + WI-FI OUTAGE FAIL-SAFE TOGGLE + MANUAL STEP CONTROLS */}
         <OperatingSwitchBar onStepOneSecond={executeTick} />
 
         {/* STAGE 1 & 2: TIME-DOMAIN WAVEFORM (3,200 Hz) & RADIX-2 FFT SPECTRUM */}
