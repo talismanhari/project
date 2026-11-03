@@ -27,6 +27,16 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+firmware/.pio/
+
+# Pipeline generated artifacts
+ml_pipeline/data/*.npz
+ml_pipeline/data/*.csv
+
 # OS / Editor
 .DS_Store
 *.swp
