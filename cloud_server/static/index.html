@@ -92,7 +92,7 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 MODE 1: NOMINAL / MILD (~80% Target)
               </span>
-              <span class="text-gray-400 font-mono text-[9px]">0.50 mJ • Wi-Fi Sleep</span>
+              <span class="text-gray-400 font-mono text-[9px]">20.4 mJ • Wi-Fi Sleep</span>
             </div>
             <div class="text-sm font-bold text-white font-sans tracking-tight">
               [ NORMAL / MILD STREAM (KEEP LOCAL) ]
@@ -189,7 +189,7 @@
         <div class="flex items-center gap-2.5">
           <span id="verdictDot" class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_#10B981]"></span>
           <div>
-            <span id="verdictText" class="font-bold">STAGE 4: LOCAL EXECUTION ACCEPTED (&lt;1 ms) • Wi-Fi Deep Sleep (0.05 mW) • ~0.50 mJ</span>
+            <span id="verdictText" class="font-bold">STAGE 4: LOCAL EXECUTION ACCEPTED (&lt;1 ms) • Wi-Fi Deep Sleep (0.05 mW) • ~20.4 mJ</span>
             <span id="stateNameText" class="text-gray-400 font-sans ml-2 text-[10px]">(Normal Operation)</span>
           </div>
         </div>
@@ -203,13 +203,13 @@
 
     <!-- 2. STAGE 1 & 2: LIVE MATLAB-STYLE OSCILLOSCOPES -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-      <!-- Scope A -->
+      <!-- Scope A: Real-Time Multi-Axis Waveform Scope -->
       <div class="rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-2">
         <div class="flex items-center justify-between border-b border-[#1E293B] pb-2 text-[11px]">
-          <span class="text-white font-bold uppercase">Stage 1 & 2 — Scope A: 1-Second Vibration Waveform [g vs ms]</span>
+          <span class="text-white font-bold uppercase">Stage 1 — Multi-Axis Waveform Scope [Tri-Axial Accel, Acoustic, Current]</span>
           <span class="text-[10px] text-gray-400">fs = 3,200 Hz • 4th-Order LPF (fc = 1500 Hz)</span>
         </div>
-        <div id="plotTime" class="h-52 w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622]"></div>
+        <div id="plotTime" class="h-60 w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622]"></div>
         <div class="flex items-center justify-between px-1 text-[10px] text-gray-400">
           <div>RMS: <strong id="valRms" class="text-emerald-400">0.0700 g</strong></div>
           <div>P2P: <strong id="valP2P" class="text-white">0.4705 g</strong></div>
@@ -218,103 +218,67 @@
         </div>
       </div>
 
-      <!-- Scope B -->
+      <!-- Scope B: Live Edge FFT Frequency Spectrum -->
       <div class="rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-2">
         <div class="flex items-center justify-between border-b border-[#1E293B] pb-2 text-[11px]">
-          <span class="text-white font-bold uppercase">Stage 1 & 2 — Scope B: Radix-2 FFT Power Spectral Density [dB vs Hz]</span>
+          <span class="text-white font-bold uppercase">Stage 2 — Live Edge FFT Power Spectral Density [dB/Hz vs Hz]</span>
           <span class="text-[10px] text-gray-400">N_fft = 1024 • 0–1600 Hz Nyquist</span>
         </div>
-        <div id="plotFFT" class="h-52 w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622]"></div>
+        <div id="plotFFT" class="h-60 w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622]"></div>
         <div class="flex items-center justify-between px-1 text-[10px] text-gray-400">
           <div class="flex items-center gap-2">
-            <span>Harmonic Markers:</span>
-            <span class="text-emerald-400 font-bold">1X (29.95 Hz)</span>
-            <span class="text-sky-400 font-bold">2X (59.9 Hz)</span>
-            <span class="text-red-400 font-bold">BPFO (107.4 Hz)</span>
-            <span class="text-amber-400 font-bold">BPFI (162.2 Hz)</span>
+            <span>Landmarks:</span>
+            <span class="text-emerald-400 font-bold">1X (29.5 Hz)</span>
+            <span class="text-sky-400 font-bold">2X (59 Hz)</span>
+            <span class="text-red-400 font-bold">BPFO (104.2 Hz)</span>
+            <span class="text-amber-400 font-bold">Gear &gt;800Hz</span>
           </div>
           <span class="text-cyan-400 font-bold">Nyquist: 1,600 Hz</span>
         </div>
       </div>
     </div>
 
-    <!-- 3. STAGE 4: CLOUD 2D-STFT & 2-SUBPLOT HARDWARE ENERGY PROFILER -->
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-3.5">
-      <!-- Left: 2D STFT Spectrogram (Cols 1-5) -->
-      <div class="xl:col-span-5 rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-2 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between border-b border-[#1E293B] pb-2 text-[11px]">
-            <span class="text-white font-bold uppercase">Stage 4 — Cloud 2D STFT Spectrogram</span>
-            <span id="stftBadge" class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              WI-FI STANDBY (LOCAL)
+    <!-- 3. STAGE 3: CALIBRATED INFERENCE & ASYMMETRIC BAYES RISK GAUGE -->
+    <div class="rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-3">
+      <div class="flex flex-wrap items-center justify-between border-b border-[#1E293B] pb-2 text-[11px]">
+        <div class="flex items-center gap-2">
+          <span class="text-white font-bold uppercase tracking-wider">
+            Stage 3 — Calibrated Inference & Asymmetric Bayes Risk Engine
+          </span>
+          <span class="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            T = 1.45 • θ = 1.20
+          </span>
+        </div>
+        <button onclick="toggleMathDrawer()" class="px-3 py-1 rounded border border-[#1E293B] bg-[#101622] hover:bg-[#151D2A] text-gray-300 text-[10px]">
+          <span id="drawerToggleText">Inspect 8×8 Penalty Cost Matrix & INT8 Registers</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
+        <!-- Dynamic Radial Risk Gauge (Cols 1-4) -->
+        <div class="lg:col-span-4 rounded-lg border border-[#1E293B] bg-[#101622] p-2 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[10px] text-gray-300 font-bold px-1">
+            <span>Dynamic Bayes Risk Gauge</span>
+            <span id="riskVerdictPill" class="text-emerald-400 text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+              R(x) &lt; 1.20 (ACCEPT)
             </span>
           </div>
-          <div id="plotSTFT" class="h-64 w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622] mt-2"></div>
-        </div>
-        <div class="flex items-center justify-between px-1 text-[10px] text-gray-400 pt-1 border-t border-[#1E293B]/60">
-          <span>ResNet-50 Cloud CNN Target</span>
-          <span id="stftHarmonicText" class="text-emerald-400 font-bold">Normal Low-Entropy PSD</span>
-        </div>
-      </div>
-
-      <!-- Right: Dual-Subplot Energy Analyzer (Cols 6-12) -->
-      <div class="xl:col-span-7 rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-2.5">
-        <!-- Monospace KPI Readout Bar (Slide 6 Expected Result) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
-          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
-            <div class="text-gray-400">Cloud Offload Rate:</div>
-            <div class="text-sm font-bold text-emerald-400 mt-0.5"><span id="kpiOffloadRate">0.0</span>% <span class="text-[9px] font-normal text-gray-400">(vs 92.4% Kumar)</span></div>
-          </div>
-          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
-            <div class="text-gray-400">Energy per Cycle:</div>
-            <div class="text-sm font-bold text-white mt-0.5">~0.50 <span class="text-[9px] font-normal text-gray-400">/ 1,500 mJ</span></div>
-          </div>
-          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
-            <div class="text-gray-400">Avg Hybrid Latency:</div>
-            <div class="text-sm font-bold text-cyan-300 mt-0.5">&lt; 1.5 s <span class="text-[9px] font-normal text-gray-400">(vs 8.867 s)</span></div>
-          </div>
-          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
-            <div class="text-gray-400">Battery Lifespan:</div>
-            <div class="text-sm font-bold text-amber-300 mt-0.5"><span id="kpiBattery">4.8</span> Yrs <span class="text-[9px] font-normal text-emerald-400">(6× Ext)</span></div>
+          <div id="plotRiskGauge" class="h-44 w-full"></div>
+          <div class="text-[9px] text-gray-400 text-center pb-1">
+            Gold Marker = Deferral Threshold Boundary (θ = 1.20)
           </div>
         </div>
 
-        <!-- 2-Subplot Energy Charts -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-          <div class="rounded-lg border border-[#1E293B] bg-[#101622] p-2 space-y-1">
-            <div class="text-[10px] text-gray-300 font-bold flex items-center justify-between">
-              <span>Subplot 1: Instantaneous Energy (Log10 mJ)</span>
-              <span class="text-emerald-400 text-[9px]">0.5 mJ vs 1500 mJ</span>
-            </div>
-            <div id="plotEnergyInstant" class="h-44 w-full"></div>
+        <!-- Horizontal Probability Distribution Bars (Cols 5-12) -->
+        <div class="lg:col-span-8 rounded-lg border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[10px] text-gray-300 font-bold mb-1">
+            <span>Calibrated Posterior Probability Distribution P_T(y_j|x) [%]</span>
+            <span class="text-cyan-400 text-[9px]">8 Machinery Health States</span>
           </div>
-
-          <div class="rounded-lg border border-[#1E293B] bg-[#101622] p-2 space-y-1">
-            <div class="text-[10px] text-gray-300 font-bold flex items-center justify-between">
-              <span>Subplot 2: Cumulative Energy (Log10 mJ)</span>
-              <span id="savingsPctText" class="text-emerald-400 text-[9px]">98.2% Saved</span>
-            </div>
-            <div id="plotEnergyCumulative" class="h-44 w-full"></div>
+          <div id="probBarsContainer" class="space-y-1.5 flex-1 flex flex-col justify-center">
+            <!-- Dynamically Populated in JavaScript -->
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 4. STAGE 3: CORE 1 TINYML MATH BAR & EXPANDABLE DRAWER -->
-    <div class="rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div class="flex flex-wrap items-center gap-4 text-gray-300">
-          <div class="font-bold text-white uppercase text-[11px] tracking-wider">
-            Stage 3 — ESP32-S3 Core 1 TinyML & Risk Gatekeeper
-          </div>
-          <div class="h-4 w-px bg-[#1E293B]"></div>
-          <div>QAT INT8 Error (|ε|): <strong class="text-cyan-300">1.25e-04</strong> <span class="text-emerald-400 text-[10px]">(4× SRAM: 80B → 20B)</span></div>
-          <div class="h-4 w-px bg-[#1E293B]"></div>
-          <div>Calibrated P_T(c|x): <strong id="topProbText" class="text-white">96.8%</strong> <span id="topClassText" class="text-gray-400">(Normal • &lt;0.05 ms)</span></div>
-        </div>
-        <button onclick="toggleMathDrawer()" class="px-3 py-1 rounded border border-[#1E293B] bg-[#101622] hover:bg-[#151D2A] text-gray-300 text-[11px]">
-          <span id="drawerToggleText">Inspect Raw INT8 Registers & 8×8 Matrix</span>
-        </button>
       </div>
 
       <!-- Expandable math drawer -->
@@ -353,6 +317,71 @@
         </div>
       </div>
     </div>
+
+    <!-- 4. STAGE 4 & 5: CLOUD 2D-STFT & DUAL ENERGY PROFILER -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-3.5">
+      <!-- Left: Stage 4 - 2D STFT Spectrogram (Cols 1-5, min-h-[280px]) -->
+      <div class="xl:col-span-5 rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-2 flex flex-col justify-between min-h-[280px]">
+        <div>
+          <div class="flex items-center justify-between border-b border-[#1E293B] pb-2 text-[11px]">
+            <span class="text-white font-bold uppercase">Stage 4 — Cloud 2D STFT Spectrogram [PyTorch N=256 H=64]</span>
+            <span id="stftBadge" class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              WI-FI STANDBY (LOCAL)
+            </span>
+          </div>
+          <div id="plotSTFT" class="h-64 min-h-[280px] w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622] mt-2"></div>
+        </div>
+        <div class="flex items-center justify-between px-1 text-[10px] text-gray-400 pt-1 border-t border-[#1E293B]/60">
+          <span>ResNet-50 Cloud CNN Target</span>
+          <span id="stftHarmonicText" class="text-emerald-400 font-bold">Normal Low-Entropy PSD</span>
+        </div>
+      </div>
+
+      <!-- Right: Stage 5 - Dual Energy Profiler (Cols 6-12) -->
+      <div class="xl:col-span-7 rounded-xl border border-[#1E293B] bg-[#0B0F19] p-3.5 space-y-2.5">
+        <!-- Live KPI Readout Bar -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
+            <div class="text-gray-400">Cloud Offload Rate:</div>
+            <div class="text-sm font-bold text-emerald-400 mt-0.5"><span id="kpiOffloadRate">0.0</span>% <span class="text-[9px] font-normal text-gray-400">(vs 92.4% Kumar)</span></div>
+          </div>
+          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
+            <div class="text-gray-400">Energy Saved:</div>
+            <div class="text-sm font-bold text-emerald-400 mt-0.5"><span id="kpiSavedPct">98.6</span>% <span class="text-[9px] font-normal text-gray-400">vs Baseline</span></div>
+          </div>
+          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
+            <div class="text-gray-400">Current Measured:</div>
+            <div class="text-sm font-bold text-cyan-300 mt-0.5"><span id="kpiMeasuredJ">0.020</span> J <span class="text-[9px] font-normal text-gray-400">(Total)</span></div>
+          </div>
+          <div class="p-2 rounded bg-[#101622] border border-[#1E293B]">
+            <div class="text-gray-400">Always-Cloud Baseline:</div>
+            <div class="text-sm font-bold text-red-400 mt-0.5"><span id="kpiBaselineJ">1.500</span> J <span class="text-[9px] font-normal text-gray-400">(1.5 J/s)</span></div>
+          </div>
+        </div>
+
+        <!-- 2-Subplot Energy Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <!-- Subplot 1: Instantaneous Energy (Log10 mJ) -->
+          <div class="rounded-lg border border-[#1E293B] bg-[#101622] p-2 space-y-1">
+            <div class="text-[10px] text-gray-300 font-bold flex items-center justify-between">
+              <span>Subplot 1: Instantaneous Energy [Log10 mJ]</span>
+              <span class="text-emerald-400 text-[9px]">20.4 mJ vs 1500 mJ</span>
+            </div>
+            <div id="plotEnergyInstant" class="h-44 w-full"></div>
+          </div>
+
+          <!-- Subplot 2: Cumulative Energy Trajectory (Joules) -->
+          <div class="rounded-lg border border-[#1E293B] bg-[#101622] p-2 space-y-1">
+            <div class="text-[10px] text-gray-300 font-bold flex items-center justify-between">
+              <span>Subplot 2: Cumulative Energy Trajectory [Joules]</span>
+              <span id="savingsPctText" class="text-emerald-400 text-[9px]">98.6% Saved</span>
+            </div>
+            <div id="plotEnergyCumulative" class="h-44 w-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- DASHBOARD JAVASCRIPT STATE ENGINE -->
@@ -365,9 +394,12 @@
     let riskThreshold = 1.20;
 
     let historyLog = [];
-    let tinyCumulative = 0.0;
-    let baselineCumulative = 0.0;
     let offloadCount = 0;
+
+    const STATE_NAMES = [
+      "Normal", "Mild Imbalance", "Severe Imbalance", "Misalignment",
+      "Looseness", "Inner Race Fault", "Outer Race Fault", "Ball Fault"
+    ];
 
     const baseLayout = {
       paper_bgcolor: '#0B0F19',
@@ -380,33 +412,83 @@
 
     // Initialize Plotly Scopes
     function initPlots() {
-      // 1. Time Scope
-      Plotly.newPlot('plotTime', [{
-        x: Array.from({length: 800}, (_, i) => i * 1.25),
-        y: new Array(800).fill(0),
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#10B981', width: 1 }
-      }], {
+      // 1. Stage 1: Multi-Axis Time Scope
+      Plotly.newPlot('plotTime', [
+        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'ax [m/s²]', line: { color: '#10B981', width: 1.2 } },
+        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'ay [m/s²]', line: { color: '#38BDF8', width: 1.2 } },
+        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'az [m/s²]', line: { color: '#A855F7', width: 1.2 } },
+        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'Acoustic (INMP441)', yaxis: 'y2', line: { color: '#F59E0B', width: 1, dash: 'dot' } },
+        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'Current ACS712 [A]', yaxis: 'y3', line: { color: '#EF4444', width: 1, dash: 'dash' } }
+      ], {
         ...baseLayout,
+        margin: { l: 45, r: 45, t: 25, b: 30 },
         xaxis: { ...baseLayout.xaxis, title: { text: 'Time [ms]', font: { size: 9 } }, range: [0, 1000] },
-        yaxis: { ...baseLayout.yaxis, title: { text: 'Amplitude [g]', font: { size: 9 } } }
+        yaxis: { ...baseLayout.yaxis, title: { text: 'Accel [m/s²]', font: { size: 9, color: '#10B981' } } },
+        yaxis2: {
+          title: { text: 'Audio [±1]', font: { size: 8, color: '#F59E0B' } },
+          overlaying: 'y',
+          side: 'right',
+          range: [-1.2, 1.2],
+          showgrid: false,
+          tickfont: { size: 8, color: '#F59E0B' }
+        },
+        legend: { orientation: 'h', x: 0, y: 1.24, font: { size: 8 } }
       }, { responsive: true, displayModeBar: false });
 
-      // 2. FFT Scope
+      // 2. Stage 2: FFT Frequency Scope
       Plotly.newPlot('plotFFT', [{
         x: Array.from({length: 250}, (_, i) => i * 3.2),
         y: new Array(250).fill(-70),
         type: 'scatter',
         mode: 'lines',
-        line: { color: '#38BDF8', width: 1 }
+        line: { color: '#38BDF8', width: 1.2 }
       }], {
         ...baseLayout,
-        xaxis: { ...baseLayout.xaxis, title: { text: 'Frequency [Hz]', font: { size: 9 } }, range: [0, 800] },
-        yaxis: { ...baseLayout.yaxis, title: { text: 'PSD [dB/Hz]', font: { size: 9 } } }
+        xaxis: { ...baseLayout.xaxis, title: { text: 'Frequency [Hz]', font: { size: 9 } }, range: [0, 1600] },
+        yaxis: { ...baseLayout.yaxis, title: { text: 'PSD [dB/Hz]', font: { size: 9 } }, range: [-90, 10] },
+        shapes: [
+          { type: 'line', x0: 29.5, x1: 29.5, y0: 0, y1: 1, yref: 'paper', line: { color: '#10B981', width: 1, dash: 'dash' } },
+          { type: 'line', x0: 59.0, x1: 59.0, y0: 0, y1: 1, yref: 'paper', line: { color: '#38BDF8', width: 1, dash: 'dot' } },
+          { type: 'line', x0: 88.5, x1: 88.5, y0: 0, y1: 1, yref: 'paper', line: { color: '#A855F7', width: 1, dash: 'dot' } },
+          { type: 'line', x0: 104.2, x1: 104.2, y0: 0, y1: 1, yref: 'paper', line: { color: '#EF4444', width: 1.5 } },
+          { type: 'rect', x0: 850, x1: 1200, y0: 0, y1: 1, yref: 'paper', fillcolor: 'rgba(245, 158, 11, 0.08)', line: { width: 0 } }
+        ],
+        annotations: [
+          { x: 29.5, y: 0.98, yref: 'paper', text: '1X', showarrow: false, font: { size: 8, color: '#10B981' } },
+          { x: 59.0, y: 0.98, yref: 'paper', text: '2X', showarrow: false, font: { size: 8, color: '#38BDF8' } },
+          { x: 104.2, y: 0.98, yref: 'paper', text: 'BPFO', showarrow: false, font: { size: 8, color: '#EF4444' } },
+          { x: 1000, y: 0.98, yref: 'paper', text: 'Gear Mesh Resonance', showarrow: false, font: { size: 8, color: '#F59E0B' } }
+        ]
       }, { responsive: true, displayModeBar: false });
 
-      // 3. STFT Spectrogram
+      // 3. Stage 3: Dynamic Radial Bayes Risk Gauge
+      Plotly.newPlot('plotRiskGauge', [{
+        type: 'indicator',
+        mode: 'gauge+number',
+        value: 0.142,
+        number: { font: { family: 'JetBrains Mono, monospace', size: 20, color: '#10B981' }, valueformat: '.3f' },
+        gauge: {
+          axis: { range: [0, 3.0], tickwidth: 1, tickcolor: '#64748B', tickfont: { size: 8 } },
+          bar: { color: '#10B981', thickness: 0.28 },
+          bgcolor: '#101622',
+          borderwidth: 1,
+          bordercolor: '#1E293B',
+          steps: [
+            { range: [0, 1.20], color: 'rgba(16, 185, 129, 0.15)' },
+            { range: [1.20, 3.0], color: 'rgba(239, 68, 68, 0.18)' }
+          ],
+          threshold: {
+            line: { color: '#F59E0B', width: 3 },
+            thickness: 0.8,
+            value: 1.20
+          }
+        }
+      }], {
+        ...baseLayout,
+        margin: { l: 25, r: 25, t: 20, b: 15 }
+      }, { responsive: true, displayModeBar: false });
+
+      // 4. Stage 4: 2D STFT Spectrogram
       Plotly.newPlot('plotSTFT', [{
         z: [[-80, -75], [-70, -65]],
         type: 'heatmap',
@@ -416,26 +498,25 @@
       }], {
         ...baseLayout,
         xaxis: { ...baseLayout.xaxis, title: { text: 'Window Time [s]', font: { size: 9 } } },
-        yaxis: { ...baseLayout.yaxis, title: { text: 'Frequency [Hz]', font: { size: 9 } }, range: [0, 800] }
+        yaxis: { ...baseLayout.yaxis, title: { text: 'Frequency [Hz]', font: { size: 9 } }, range: [0, 1600] }
       }, { responsive: true, displayModeBar: false });
 
-      // 4. Energy Instantaneous (Log10)
+      // 5. Stage 5: Subplot 1: Instantaneous Energy (Log10 mJ)
       Plotly.newPlot('plotEnergyInstant', [
-        { x: [], y: [], type: 'scatter', mode: 'lines+markers', name: 'Kumar (92.4%)', line: { color: '#EF4444', width: 1.5, dash: 'dash' }, marker: { size: 4 } },
-        { x: [], y: [], type: 'scatter', mode: 'lines+markers', name: 'TinyDefer', line: { color: '#10B981', width: 1.5 }, marker: { size: 4 } }
+        { x: [], y: [], type: 'scatter', mode: 'lines+markers', name: 'Instant (mJ)', line: { color: '#10B981', width: 1.5 }, marker: { size: 4 } }
       ], {
         ...baseLayout,
-        yaxis: { ...baseLayout.yaxis, type: 'log', range: [-0.5, 3.8], title: { text: 'Log10 mJ', font: { size: 8 } } },
+        yaxis: { ...baseLayout.yaxis, type: 'log', range: [0.8, 3.5], title: { text: 'mJ (Log10)', font: { size: 8 } } },
         legend: { orientation: 'h', x: 0, y: 1.25, font: { size: 8 } }
       }, { responsive: true, displayModeBar: false });
 
-      // 5. Energy Cumulative (Log10)
+      // 6. Stage 5: Subplot 2: Cumulative Energy Trajectory (Joules)
       Plotly.newPlot('plotEnergyCumulative', [
-        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'Kumar 2026', line: { color: '#EF4444', width: 1.5, dash: 'dash' } },
-        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'TinyDefer', line: { color: '#10B981', width: 2 } }
+        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'Baseline (1.5 J/s)', line: { color: '#EF4444', width: 1.5, dash: 'dash' } },
+        { x: [], y: [], type: 'scatter', mode: 'lines', name: 'TinyDefer (Measured)', line: { color: '#10B981', width: 2 } }
       ], {
         ...baseLayout,
-        yaxis: { ...baseLayout.yaxis, type: 'log', range: [-0.3, 5.0], title: { text: 'Cumulative mJ', font: { size: 8 } } },
+        yaxis: { ...baseLayout.yaxis, title: { text: 'Energy [Joules]', font: { size: 8 } } },
         legend: { orientation: 'h', x: 0, y: 1.25, font: { size: 8 } }
       }, { responsive: true, displayModeBar: false });
     }
@@ -473,7 +554,9 @@
           body: JSON.stringify({
             mode: currentMode,
             window_idx: clockSeconds,
-            outage_failsafe: isOutageFailSafe
+            outage_failsafe: isOutageFailSafe,
+            temperature_t: temperatureT,
+            risk_threshold: riskThreshold
           })
         });
         const data = await resp.json();
@@ -484,55 +567,112 @@
     }
 
     function handleStreamPayload(data) {
-      // 1. Update Waveform
-      if (data.raw_waveform && data.times_ms) {
-        Plotly.update('plotTime', { x: [data.times_ms], y: [data.raw_waveform] });
-        const rms = Math.sqrt(data.raw_waveform.reduce((a, b) => a + b * b, 0) / data.raw_waveform.length);
-        const p2p = Math.max(...data.raw_waveform) - Math.min(...data.raw_waveform);
-        document.getElementById('valRms').innerText = rms.toFixed(4) + ' g';
-        document.getElementById('valP2P').innerText = p2p.toFixed(4) + ' g';
+      const tel = data.telemetry || {};
+      const fft = data.fft || {};
+      const risk = data.risk || {};
+      const spec = data.spectrogram || {};
+      const energy = data.energy || {};
+
+      // 1. Stage 1: Update Multi-Axis Waveform
+      if (tel.times_ms) {
+        Plotly.update('plotTime', {
+          x: [tel.times_ms, tel.times_ms, tel.times_ms, tel.times_ms, tel.times_ms],
+          y: [tel.accel_x || [], tel.accel_y || [], tel.accel_z || [], tel.acoustic || [], tel.current_a || []]
+        });
+        document.getElementById('valRms').innerText = (tel.rms_g !== undefined ? tel.rms_g.toFixed(4) : '0.0700') + ' g';
+        document.getElementById('valP2P').innerText = (tel.p2p_g !== undefined ? tel.p2p_g.toFixed(4) : '0.4705') + ' g';
+        document.getElementById('valKurt').innerText = (tel.kurtosis !== undefined ? tel.kurtosis.toFixed(2) : '2.85');
+        document.getElementById('valCrest').innerText = (tel.crest !== undefined ? tel.crest.toFixed(2) : '2.50');
       }
 
-      // 2. Update FFT
-      if (data.fft_freqs && data.fft_psd_db) {
-        Plotly.update('plotFFT', { x: [data.fft_freqs], y: [data.fft_psd_db] });
+      // 2. Stage 2: Update FFT Spectrum
+      if (fft.freqs && fft.psd) {
+        Plotly.update('plotFFT', { x: [fft.freqs], y: [fft.psd] });
       }
 
-      // 3. Update STFT
-      if (data.stft_matrix) {
-        Plotly.update('plotSTFT', { z: [data.stft_matrix] });
+      // 3. Stage 3: Dynamic Radial Risk Gauge & Probability Bars
+      const riskScore = (risk.score !== undefined ? risk.score : (data.min_risk || 0.142));
+      const isDef = (risk.decision === 'OFFLOAD_CLOUD');
+      const isFailSafe = (risk.decision === 'FAILSAFE_LOCAL');
+      
+      Plotly.restyle('plotRiskGauge', {
+        value: [riskScore],
+        'gauge.bar.color': [riskScore >= riskThreshold ? '#EF4444' : '#10B981'],
+        'gauge.threshold.value': [riskThreshold],
+        'number.font.color': [riskScore >= riskThreshold ? '#EF4444' : '#10B981']
+      });
+
+      const verdictPill = document.getElementById('riskVerdictPill');
+      if (riskScore >= riskThreshold) {
+        verdictPill.className = 'text-red-400 text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/30';
+        verdictPill.innerText = `R(x)=${riskScore.toFixed(3)} ≥ θ (DEFER)`;
+      } else {
+        verdictPill.className = 'text-emerald-400 text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30';
+        verdictPill.innerText = `R(x)=${riskScore.toFixed(3)} < θ (ACCEPT)`;
       }
 
-      // 4. Update Energy
-      const isOffload = (data.decision === 'OFFLOAD_CLOUD');
-      const isFailSafe = (data.decision === 'FAILSAFE_LOCAL');
-      if (isOffload) offloadCount++;
+      // Update Probability Distribution Bars
+      const probs = risk.probs || [0.968, 0.015, 0.005, 0.004, 0.003, 0.002, 0.002, 0.001];
+      const barsContainer = document.getElementById('probBarsContainer');
+      barsContainer.innerHTML = '';
+      
+      STATE_NAMES.forEach((name, idx) => {
+        const probVal = (probs[idx] || 0.0) * 100.0;
+        const isDominant = probVal > 25.0;
+        const barColor = isDominant ? (idx === 0 ? 'bg-emerald-500' : 'bg-red-500') : 'bg-cyan-500/50';
+        const textColor = isDominant ? 'text-white font-bold' : 'text-gray-400';
 
-      // Kumar stochastic 92.4% baseline (11 out of 12 seconds ~1500 mJ, else 2.2 mJ)
-      const kumarInstant = (clockSeconds % 12 !== 5) ? (1495.0 + Math.random() * 20.0) : 2.2;
-      const tinyInstant = isOffload ? 1500.0 : 0.504 + (Math.random() - 0.5) * 0.04;
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 text-[10px]';
+        row.innerHTML = `
+          <div class="w-32 truncate ${textColor}">${name}:</div>
+          <div class="flex-1 bg-[#07090C] rounded-full h-2 overflow-hidden border border-[#1E293B]">
+            <div class="${barColor} h-full transition-all duration-300" style="width: ${probVal.toFixed(1)}%"></div>
+          </div>
+          <div class="w-12 text-right font-mono ${textColor}">${probVal.toFixed(1)}%</div>
+        `;
+        barsContainer.appendChild(row);
+      });
 
-      tinyCumulative += tinyInstant;
-      baselineCumulative += kumarInstant;
+      // 4. Stage 4: Update 2D STFT Spectrogram
+      if (spec.z) {
+        Plotly.update('plotSTFT', { z: [spec.z] });
+      }
 
-      historyLog.push({ t: `${clockSeconds}s`, tiny: tinyInstant, kumar: kumarInstant, cTiny: tinyCumulative, cKumar: baselineCumulative });
+      // 5. Stage 5: Update Dual Energy Profiler
+      if (isDef) offloadCount++;
+
+      const instantEnergy = (energy.instantaneous_mj !== undefined ? energy.instantaneous_mj : (isDef ? 1500.0 : 20.4));
+      const measCumulativeJ = (energy.cumulative_measured_j !== undefined ? energy.cumulative_measured_j : (clockSeconds * 0.020));
+      const baseCumulativeJ = (energy.cumulative_baseline_j !== undefined ? energy.cumulative_baseline_j : (clockSeconds * 1.500));
+      const savedPct = (energy.saved_percent !== undefined ? energy.saved_percent : 98.6);
+
+      historyLog.push({
+        t: `${clockSeconds}s`,
+        instant: instantEnergy,
+        cMeas: measCumulativeJ,
+        cBase: baseCumulativeJ
+      });
       if (historyLog.length > 25) historyLog.shift();
 
       Plotly.update('plotEnergyInstant', {
-        x: [historyLog.map(h => h.t), historyLog.map(h => h.t)],
-        y: [historyLog.map(h => h.kumar), historyLog.map(h => h.tiny)]
+        x: [historyLog.map(h => h.t)],
+        y: [historyLog.map(h => h.instant)],
+        'marker.color': [historyLog.map(h => h.instant > 100 ? '#EF4444' : '#10B981')]
       });
 
       Plotly.update('plotEnergyCumulative', {
         x: [historyLog.map(h => h.t), historyLog.map(h => h.t)],
-        y: [historyLog.map(h => h.cKumar), historyLog.map(h => h.cTiny)]
+        y: [historyLog.map(h => h.cBase), historyLog.map(h => h.cMeas)]
       });
 
-      // Update KPI
+      // Update KPI Bar
       const offloadRate = (offloadCount / clockSeconds) * 100.0;
       document.getElementById('kpiOffloadRate').innerText = offloadRate.toFixed(1);
-      const savings = Math.max(0, ((baselineCumulative - tinyCumulative) / baselineCumulative) * 100);
-      document.getElementById('savingsPctText').innerText = savings.toFixed(1) + '% Saved';
+      document.getElementById('kpiSavedPct').innerText = savedPct.toFixed(1);
+      document.getElementById('kpiMeasuredJ').innerText = measCumulativeJ.toFixed(3);
+      document.getElementById('kpiBaselineJ').innerText = baseCumulativeJ.toFixed(3);
+      document.getElementById('savingsPctText').innerText = savedPct.toFixed(1) + '% Saved';
 
       // Verdict Banner
       const banner = document.getElementById('verdictBanner');
@@ -541,69 +681,64 @@
       const riskVal = document.getElementById('riskValueText');
       const marginVal = document.getElementById('marginText');
 
-      riskVal.innerText = data.min_risk.toFixed(3);
-      marginVal.innerText = (data.min_risk - riskThreshold).toFixed(3);
-      document.getElementById('stateNameText').innerText = `(${data.state_name})`;
+      riskVal.innerText = riskScore.toFixed(3);
+      marginVal.innerText = (riskScore - riskThreshold).toFixed(3);
+      document.getElementById('stateNameText').innerText = `(${data.state_name || risk.hypothesis || 'Normal'})`;
 
       if (isFailSafe) {
         banner.className = 'p-3 rounded-lg border flex flex-wrap items-center justify-between gap-3 text-xs bg-[#1A1608] border-amber-500 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.2)]';
         dot.className = 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
-        text.innerText = 'STAGE 4: WI-FI OUTAGE FAIL-SAFE ACTIVE • Conservative Local Bayes Rule • 0.50 mJ';
-        document.getElementById('stftBadge').className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
-        document.getElementById('stftBadge').innerText = 'FAIL-SAFE (LOCAL STANDBY)';
-        document.getElementById('stftHarmonicText').innerText = 'Local Fallback >98% Recall';
-      } else if (isOffload) {
-        banner.className = 'p-3 rounded-lg border flex flex-wrap items-center justify-between gap-3 text-xs bg-[#1C0F12] border-red-500/60 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.2)]';
-        dot.className = 'w-3 h-3 rounded-full bg-red-500 animate-ping';
-        text.innerText = 'STAGE 4: AUTONOMOUS CLOUD OFFLOAD TRIGGERED • Wi-Fi TX Wake -> MQTT Uplink • ~1,500 mJ';
-        document.getElementById('stftBadge').className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse';
-        document.getElementById('stftBadge').innerText = 'MQTT UPLINK ACTIVE';
-        document.getElementById('stftHarmonicText').innerText = 'BPFO/BPFI Resonance Harmonics Flagged';
+        text.innerText = 'STAGE 4: WI-FI OUTAGE FAIL-SAFE ACTIVE • Edge Inference Enforced (0.50 mJ)';
+      } else if (isDef) {
+        banner.className = 'p-3 rounded-lg border flex flex-wrap items-center justify-between gap-3 text-xs bg-[#1A0E12] border-red-500 text-red-200 shadow-[0_0_20px_rgba(239,68,68,0.2)]';
+        dot.className = 'w-3 h-3 rounded-full bg-red-400 animate-pulse';
+        text.innerText = 'STAGE 4: AUTONOMOUS CLOUD OFFLOAD TRIGGERED • Wi-Fi Burst (320 mA) • 1,500 mJ';
       } else {
         banner.className = 'p-3 rounded-lg border flex flex-wrap items-center justify-between gap-3 text-xs bg-[#0E1713] border-emerald-500/50 text-emerald-300';
         dot.className = 'w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_#10B981]';
-        text.innerText = 'STAGE 4: LOCAL EXECUTION ACCEPTED (<1 ms) • Wi-Fi Deep Sleep (0.05 mW) • ~0.50 mJ';
-        document.getElementById('stftBadge').className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
-        document.getElementById('stftBadge').innerText = 'WI-FI STANDBY (LOCAL)';
-        document.getElementById('stftHarmonicText').innerText = 'Normal Low-Entropy PSD';
+        text.innerText = 'STAGE 4: LOCAL EXECUTION ACCEPTED (<1 ms) • Wi-Fi Deep Sleep (0.05 mW) • 20.4 mJ';
       }
     }
 
-    // Mode Switch Handler
+    // Toggle Modes & UI Actions
     function setMode(mode) {
       currentMode = mode;
       const b1 = document.getElementById('btnMode1');
       const b2 = document.getElementById('btnMode2');
+
       if (mode === 'MODE_1_NORMAL') {
         b1.className = 'p-3 rounded-lg border text-left transition-all bg-[#0E1713] border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/40';
         b2.className = 'p-3 rounded-lg border text-left transition-all bg-[#101622] border-[#1E293B] text-gray-400 hover:border-red-500/40 hover:bg-[#1C141E]';
+        b1.querySelector('.rounded-full').className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        b2.querySelector('.rounded-full').className = 'w-2 h-2 rounded-full bg-gray-600';
       } else {
-        b2.className = 'p-3 rounded-lg border text-left transition-all bg-[#1C0F12] border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40';
-        b1.className = 'p-3 rounded-lg border text-left transition-all bg-[#101622] border-[#1E293B] text-gray-400 hover:border-emerald-500/40 hover:bg-[#131B29]';
+        b2.className = 'p-3 rounded-lg border text-left transition-all bg-[#1A0E12] border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] ring-1 ring-red-500/40';
+        b1.className = 'p-3 rounded-lg border text-left transition-all bg-[#101622] border-[#1E293B] text-gray-400 hover:border-emerald-500/40 hover:bg-[#0E1713]';
+        b2.querySelector('.rounded-full').className = 'w-2 h-2 rounded-full bg-red-400 animate-pulse';
+        b1.querySelector('.rounded-full').className = 'w-2 h-2 rounded-full bg-gray-600';
       }
       stepOneSecond();
     }
 
-    // Toggle Outage
     function toggleOutage() {
       isOutageFailSafe = !isOutageFailSafe;
-      const btn = document.getElementById('btnOutage');
+      const b = document.getElementById('btnOutage');
       const badge = document.getElementById('outageStatusBadge');
-      const label = document.getElementById('outageLabel');
       const icon = document.getElementById('outageIcon');
+      const label = document.getElementById('outageLabel');
 
       if (isOutageFailSafe) {
-        btn.className = 'p-3 rounded-lg border text-left transition-all bg-[#1A1608] border-amber-500 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.25)] ring-1 ring-amber-500/50 flex flex-col justify-between';
+        b.className = 'p-3 rounded-lg border text-left transition-all bg-[#1C1608] border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)] ring-1 ring-amber-500/40 flex flex-col justify-between';
         badge.className = 'px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
-        badge.innerText = 'OUTAGE ACTIVE';
-        label.innerText = 'FAIL-SAFE ENGAGED';
+        badge.innerText = 'WI-FI OUTAGE ACTIVE';
         icon.innerText = '⚠️';
+        label.innerText = 'RESTORE WI-FI LINK';
       } else {
-        btn.className = 'p-3 rounded-lg border text-left transition-all bg-[#101622] border-[#1E293B] text-gray-400 hover:border-amber-500/40 flex flex-col justify-between';
+        b.className = 'p-3 rounded-lg border text-left transition-all bg-[#101622] border-[#1E293B] text-gray-400 hover:border-amber-500/40 flex flex-col justify-between';
         badge.className = 'px-1.5 py-0.2 rounded text-[9px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30';
         badge.innerText = 'WI-FI CONNECTED';
-        label.innerText = 'SIMULATE LINK OUTAGE';
         icon.innerText = '📶';
+        label.innerText = 'SIMULATE LINK OUTAGE';
       }
       stepOneSecond();
     }
@@ -615,62 +750,60 @@
       if (isStreaming) {
         btn.innerText = 'PAUSE';
         btn.className = 'flex-1 py-1 rounded border text-[11px] font-bold transition-colors bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25';
-        badge.innerText = '● STREAMING';
         badge.className = 'text-emerald-400 font-bold font-mono';
+        badge.innerText = '● STREAMING';
       } else {
         btn.innerText = 'RESUME';
         btn.className = 'flex-1 py-1 rounded border text-[11px] font-bold transition-colors bg-emerald-500/15 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25';
-        badge.innerText = '❚❚ PAUSED';
         badge.className = 'text-amber-400 font-bold font-mono';
+        badge.innerText = '❚❚ PAUSED';
       }
     }
 
     function resetTimeline() {
       clockSeconds = 1;
-      tinyCumulative = 0.0;
-      baselineCumulative = 0.0;
-      offloadCount = 0;
       historyLog = [];
-      document.getElementById('clockTick').innerText = '1';
-      document.getElementById('windowIdx').innerText = '1';
+      offloadCount = 0;
       stepOneSecond();
     }
 
     function updateT(val) {
       temperatureT = parseFloat(val);
       document.getElementById('valT').innerText = temperatureT.toFixed(2);
+      stepOneSecond();
     }
 
     function updateTheta(val) {
       riskThreshold = parseFloat(val);
       document.getElementById('valTheta').innerText = riskThreshold.toFixed(2);
       document.getElementById('thresholdText').innerText = riskThreshold.toFixed(2);
+      stepOneSecond();
     }
 
     function toggleMathDrawer() {
-      const drawer = document.getElementById('mathDrawer');
-      const text = document.getElementById('drawerToggleText');
-      if (drawer.classList.contains('hidden')) {
-        drawer.classList.remove('hidden');
-        text.innerText = 'Hide Math Details';
+      const d = document.getElementById('mathDrawer');
+      const t = document.getElementById('drawerToggleText');
+      if (d.classList.contains('hidden')) {
+        d.classList.remove('hidden');
+        t.innerText = 'Hide Penalty Matrix & INT8 Registers';
       } else {
-        drawer.classList.add('hidden');
-        text.innerText = 'Inspect Raw INT8 Registers & 8×8 Matrix';
+        d.classList.add('hidden');
+        t.innerText = 'Inspect 8×8 Penalty Cost Matrix & INT8 Registers';
       }
     }
 
-    // 1 Hz Autonomous Loop
-    setInterval(() => {
-      if (isStreaming) {
-        stepOneSecond();
-      }
-    }, 1000);
-
-    window.onload = () => {
+    // Window Load Lifecycle
+    window.addEventListener('load', () => {
       initPlots();
       setupWebSocket();
       stepOneSecond();
-    };
+
+      setInterval(() => {
+        if (isStreaming) {
+          stepOneSecond();
+        }
+      }, 1000);
+    });
   </script>
 </body>
 </html>

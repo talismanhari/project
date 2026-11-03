@@ -7,13 +7,60 @@ import Plotly from 'plotly.js-dist-min';
 export const Plot1Oscilloscopes: React.FC = () => {
   const { telemetryData } = useAppSelector((state) => state.telemetry);
 
-  // 1. Time-Domain Waveform Plot (3,200 Hz downsampled 1-second window)
+  // 1. Time-Domain Waveform Plot (Tri-Axial Accel, Acoustic INMP441, Current ACS712)
   const timePlotData: Plotly.Data[] = useMemo(() => {
-    if (!telemetryData || !telemetryData.sig_down_g || !telemetryData.time_down_s) return [];
+    if (!telemetryData) return [];
 
-    // Map 0.0-1.0s to 0-1000 ms for authentic oscilloscope timebase
+    if (telemetryData.telemetry?.times_ms) {
+      const tel = telemetryData.telemetry;
+      return [
+        {
+          x: tel.times_ms,
+          y: tel.accel_x,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'ax [m/s²]',
+          line: { color: '#10B981', width: 1.2 },
+        },
+        {
+          x: tel.times_ms,
+          y: tel.accel_y,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'ay [m/s²]',
+          line: { color: '#38BDF8', width: 1.2 },
+        },
+        {
+          x: tel.times_ms,
+          y: tel.accel_z,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'az [m/s²]',
+          line: { color: '#A855F7', width: 1.2 },
+        },
+        {
+          x: tel.times_ms,
+          y: tel.acoustic,
+          yaxis: 'y2',
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Acoustic (INMP441)',
+          line: { color: '#F59E0B', width: 1, dash: 'dot' },
+        },
+        {
+          x: tel.times_ms,
+          y: tel.current_a,
+          yaxis: 'y2',
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Current ACS712 [A]',
+          line: { color: '#EF4444', width: 1, dash: 'dash' },
+        },
+      ];
+    }
+
+    if (!telemetryData.sig_down_g || !telemetryData.time_down_s) return [];
     const times_ms = telemetryData.time_down_s.map((t) => Number((t * 1000).toFixed(1)));
-
     return [
       {
         x: times_ms,
@@ -41,15 +88,27 @@ export const Plot1Oscilloscopes: React.FC = () => {
       },
       yaxis: {
         title: {
-          text: 'Acceleration Amplitude [g]',
-          font: { family: 'JetBrains Mono, Courier New, monospace', size: 10, color: '#9CA3AF' },
+          text: 'Acceleration [m/s² / g]',
+          font: { family: 'JetBrains Mono, Courier New, monospace', size: 10, color: '#10B981' },
         },
         showgrid: true,
         gridcolor: '#1E293B',
         zerolinecolor: '#334155',
         tickcolor: '#475569',
       },
-      margin: { l: 48, r: 15, t: 15, b: 35 },
+      yaxis2: {
+        title: {
+          text: 'Audio [±1] / Current [A]',
+          font: { family: 'JetBrains Mono, monospace', size: 8, color: '#F59E0B' },
+        },
+        overlaying: 'y',
+        side: 'right',
+        range: [-1.5, 3.5],
+        showgrid: false,
+        tickfont: { size: 8, color: '#F59E0B' },
+      },
+      legend: { orientation: 'h', x: 0, y: 1.25, font: { size: 8 } },
+      margin: { l: 48, r: 45, t: 25, b: 35 },
     }),
     []
   );

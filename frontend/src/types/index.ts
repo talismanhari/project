@@ -23,8 +23,8 @@ export interface TelemetryPayload {
   state_index: number;
   window_idx?: number;
   timestamp_s?: number;
-  time_raw_s: number[];
-  sig_raw_g: number[];
+  time_raw_s?: number[];
+  sig_raw_g?: number[];
   time_down_s: number[];
   sig_down_g: number[];
   fft_freqs: number[];
@@ -36,6 +36,39 @@ export interface TelemetryPayload {
   quantization_records: QuantizationRecord[];
   raw_logits: number[];
   ina219_trace: Ina219Trace;
+  telemetry?: {
+    times_ms: number[];
+    accel_x: number[];
+    accel_y: number[];
+    accel_z: number[];
+    acoustic: number[];
+    current_a: number[];
+    rms_g: number;
+    p2p_g: number;
+    kurtosis: number;
+    crest: number;
+  };
+  energy?: {
+    instantaneous_mj: number;
+    cumulative_measured_j: number;
+    cumulative_baseline_j: number;
+    saved_percent: number;
+  };
+  spectrogram?: {
+    z: number[][];
+    times: number[];
+    freqs: number[];
+  };
+  risk?: {
+    score: number;
+    deferred: boolean;
+    threshold: number;
+    decision: string;
+    probs: number[];
+    labels: string[];
+    hypothesis: string;
+    expected_risks: number[];
+  };
   model_metrics: {
     model_architecture: string;
     train_accuracy_pct: number;

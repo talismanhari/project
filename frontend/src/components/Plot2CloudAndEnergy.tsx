@@ -25,20 +25,19 @@ export const Plot2CloudAndEnergy: React.FC = () => {
 
   // 1. Live 2D STFT Cloud Spectrogram
   const spectrogramData: Plotly.Data[] = useMemo(() => {
-    if (
-      !telemetryData ||
-      !telemetryData.stft_zxx_db ||
-      !telemetryData.stft_times ||
-      !telemetryData.stft_freqs
-    ) {
-      return [];
-    }
+    if (!telemetryData) return [];
+
+    const z_matrix = telemetryData.spectrogram?.z || telemetryData.stft_zxx_db;
+    const times = telemetryData.spectrogram?.times || telemetryData.stft_times;
+    const freqs = telemetryData.spectrogram?.freqs || telemetryData.stft_freqs;
+
+    if (!z_matrix || !times || !freqs) return [];
 
     return [
       {
-        z: telemetryData.stft_zxx_db,
-        x: telemetryData.stft_times,
-        y: telemetryData.stft_freqs,
+        z: z_matrix,
+        x: times,
+        y: freqs,
         type: 'heatmap',
         colorscale: 'Viridis',
         zsmooth: 'best',
@@ -70,7 +69,7 @@ export const Plot2CloudAndEnergy: React.FC = () => {
           text: 'Frequency [Hz]',
           font: { family: 'JetBrains Mono, monospace', size: 10, color: '#9CA3AF' },
         },
-        range: [0, 800],
+        range: [0, 1600],
         showgrid: true,
         gridcolor: '#1E293B',
       },
@@ -79,7 +78,7 @@ export const Plot2CloudAndEnergy: React.FC = () => {
     []
   );
 
-  // 2. Subplot 1: Instantaneous Energy per 1s Cycle (Log10 Y-Axis [mJ/cycle])
+  // 2. Subplot 1: Instantaneous Energy per 1s Window (Log10 Y-Axis [10^1 to 10^4 mJ])
   const instantPlotData: Plotly.Data[] = useMemo(() => {
     if (history.length === 0) return [];
 
@@ -93,7 +92,7 @@ export const Plot2CloudAndEnergy: React.FC = () => {
         y: kumarInstant,
         type: 'scatter',
         mode: 'lines+markers',
-        name: 'Kumar 2026 (92.4% Offload: ~1500 / 2.2 mJ)',
+        name: 'Baseline Always Cloud (1500 mJ)',
         line: { color: '#EF4444', width: 1.5, dash: 'dash' },
         marker: { size: 4, color: '#EF4444' },
       },
@@ -102,7 +101,7 @@ export const Plot2CloudAndEnergy: React.FC = () => {
         y: tinyInstant,
         type: 'scatter',
         mode: 'lines+markers',
-        name: 'TinyDefer (0.50 mJ Local / 1500 mJ Burst)',
+        name: 'Calibrated Deferral (20.4 mJ Edge / 1500 mJ Burst)',
         line: { color: '#10B981', width: 1.5 },
         marker: { size: 5, color: '#10B981' },
       },
@@ -121,11 +120,11 @@ export const Plot2CloudAndEnergy: React.FC = () => {
       },
       yaxis: {
         title: {
-          text: 'Cycle Energy [mJ] (Log10)',
+          text: 'Instantaneous [mJ] (Log10)',
           font: { family: 'JetBrains Mono, monospace', size: 9, color: '#9CA3AF' },
         },
         type: 'log',
-        range: [-0.5, 3.8], // 0.3 mJ to 6000 mJ
+        range: [1.0, 3.8], // 10 mJ to 6000 mJ (10^1 to 10^4 mJ)
         showgrid: true,
         gridcolor: '#1E293B',
         dtick: 1,
@@ -142,29 +141,29 @@ export const Plot2CloudAndEnergy: React.FC = () => {
     []
   );
 
-  // 3. Subplot 2: Cumulative Energy & Step Comparison (Log10 [mJ])
+  // 3. Subplot 2: Cumulative Energy Trajectory vs Baseline (Linear/Step in Joules)
   const cumulativePlotData: Plotly.Data[] = useMemo(() => {
     if (history.length === 0) return [];
 
     const xLabels = history.map((h) => h.timestamp);
-    const kumarCumulative = history.map((h) => h.cumulativeBaseline);
-    const tinyCumulative = history.map((h) => h.cumulativeTinyDefer);
+    const baselineJoules = history.map((h) => h.cumulativeBaseline);
+    const tinyJoules = history.map((h) => h.cumulativeTinyDefer);
 
     return [
       {
         x: xLabels,
-        y: kumarCumulative,
+        y: baselineJoules,
         type: 'scatter',
         mode: 'lines',
-        name: 'Kumar 2026 Cumulative [mJ]',
+        name: 'Baseline Always Cloud (1.5 J/s)',
         line: { color: '#EF4444', width: 1.5, dash: 'dash' },
       },
       {
         x: xLabels,
-        y: tinyCumulative,
+        y: tinyJoules,
         type: 'scatter',
         mode: 'lines',
-        name: 'TinyDefer Cumulative [mJ]',
+        name: 'Calibrated Deferral Model [Joules]',
         line: { color: '#10B981', width: 2 },
       },
     ];
@@ -182,14 +181,11 @@ export const Plot2CloudAndEnergy: React.FC = () => {
       },
       yaxis: {
         title: {
-          text: 'Cumulative [mJ] (Log10)',
+          text: 'Total Energy [Joules]',
           font: { family: 'JetBrains Mono, monospace', size: 9, color: '#9CA3AF' },
         },
-        type: 'log',
-        range: [-0.3, 5.0], // 0.5 mJ to 100,000 mJ
         showgrid: true,
         gridcolor: '#1E293B',
-        dtick: 1,
       },
       legend: {
         orientation: 'h',
@@ -245,7 +241,7 @@ export const Plot2CloudAndEnergy: React.FC = () => {
             </span>
           </div>
 
-          <div className="h-64 w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622] relative mt-2">
+          <div className="h-64 min-h-[280px] w-full rounded-lg overflow-hidden border border-[#1E293B] bg-[#101622] relative mt-2">
             <PlotlyChart data={spectrogramData} layout={spectrogramLayout} />
 
             {/* Standby Banner when local */}
@@ -280,9 +276,9 @@ export const Plot2CloudAndEnergy: React.FC = () => {
           </div>
 
           <div className="p-2 rounded bg-[#101622] border border-[#1E293B]">
-            <div className="text-gray-400">Energy per Cycle:</div>
-            <div className="text-sm font-bold text-white mt-0.5">
-              ~0.50 <span className="text-[9px] font-normal text-gray-400">/ 1,500 mJ</span>
+            <div className="text-gray-400">Energy Saved:</div>
+            <div className="text-sm font-bold text-emerald-400 mt-0.5">
+              {savingsPct.toFixed(1)}% <span className="text-[9px] font-normal text-gray-400">vs Always-Cloud</span>
             </div>
           </div>
 
@@ -310,8 +306,8 @@ export const Plot2CloudAndEnergy: React.FC = () => {
           {/* Subplot 1: Instantaneous Energy (Log10 Y-Axis) */}
           <div className="rounded-lg border border-[#1E293B] bg-[#101622] p-2 space-y-1">
             <div className="text-[10px] text-gray-300 font-bold flex items-center justify-between">
-              <span>Subplot 1: Instantaneous Energy (Log10 mJ)</span>
-              <span className="text-emerald-400 text-[9px]">0.5 mJ vs 1500 mJ</span>
+              <span>Subplot 1: Instantaneous Energy [Log10 mJ]</span>
+              <span className="text-emerald-400 text-[9px]">20.4 mJ vs 1500 mJ</span>
             </div>
             <div className="h-44 w-full">
               {history.length > 0 ? (
@@ -324,10 +320,10 @@ export const Plot2CloudAndEnergy: React.FC = () => {
             </div>
           </div>
 
-          {/* Subplot 2: Cumulative Energy (Log10 Y-Axis) */}
+          {/* Subplot 2: Cumulative Energy Trajectory [Joules] */}
           <div className="rounded-lg border border-[#1E293B] bg-[#101622] p-2 space-y-1">
             <div className="text-[10px] text-gray-300 font-bold flex items-center justify-between">
-              <span>Subplot 2: Cumulative Energy (Log10 mJ)</span>
+              <span>Subplot 2: Cumulative Trajectory [Joules]</span>
               <span className="text-emerald-400 text-[9px]">{savingsPct.toFixed(1)}% Saved</span>
             </div>
             <div className="h-44 w-full">

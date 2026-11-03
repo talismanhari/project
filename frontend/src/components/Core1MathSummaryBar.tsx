@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
 import { toggleMathDrawer } from '../store/telemetrySlice';
+import { PlotlyChart } from './PlotlyChart';
+import Plotly from 'plotly.js-dist-min';
 import {
   computeCalibratedProbabilities,
   computeExpectedRiskVector,
@@ -61,6 +63,48 @@ export const Core1MathSummaryBar: React.FC = () => {
   const maxProbIdx = calResults.calibratedProbabilities.indexOf(maxProb);
   const topState = MOTOR_STATES[maxProbIdx] || 'Normal';
   const isLocal = gate.decision === 'KEEP_LOCAL';
+
+  const gaugeData: Plotly.Data[] = useMemo(
+    () => [
+      {
+        type: 'indicator',
+        mode: 'gauge+number',
+        value: riskResults.minRisk,
+        number: {
+          font: { family: 'JetBrains Mono, monospace', size: 18, color: isLocal ? '#10B981' : '#EF4444' },
+          valueformat: '.3f',
+        },
+        gauge: {
+          axis: { range: [0, 3.0], tickwidth: 1, tickcolor: '#64748B', tickfont: { size: 8 } },
+          bar: { color: isLocal ? '#10B981' : '#EF4444', thickness: 0.28 },
+          bgcolor: '#101622',
+          borderwidth: 1,
+          bordercolor: '#1E293B',
+          steps: [
+            { range: [0, riskThreshold], color: 'rgba(16, 185, 129, 0.15)' },
+            { range: [riskThreshold, 3.0], color: 'rgba(239, 68, 68, 0.18)' },
+          ],
+          threshold: {
+            line: { color: '#F59E0B', width: 3 },
+            thickness: 0.8,
+            value: riskThreshold,
+          },
+        },
+      },
+    ],
+    [riskResults.minRisk, riskThreshold, isLocal]
+  );
+
+  const gaugeLayout: Partial<Plotly.Layout> = useMemo(
+    () => ({
+      paper_bgcolor: '#0B0F19',
+      plot_bgcolor: '#101622',
+      font: { family: 'JetBrains Mono, monospace', color: '#9CA3AF' },
+      margin: { l: 20, r: 20, t: 15, b: 15 },
+      height: 150,
+    }),
+    []
+  );
 
   return (
     <div className="rounded-xl border border-[#1E293B] bg-[#0B0F19] font-mono text-xs overflow-hidden transition-all">
@@ -136,6 +180,67 @@ export const Core1MathSummaryBar: React.FC = () => {
           <span>{isMathDrawerOpen ? 'Hide Math Details' : 'Inspect Raw INT8 Registers & 8×8 Matrix'}</span>
           {isMathDrawerOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
+      </div>
+
+      {/* STAGE 3 VISUAL ENGINE: DYNAMIC RADIAL GAUGE & HORIZONTAL PROBABILITY BARS */}
+      <div className="px-3.5 pb-3.5 pt-1 border-t border-[#1E293B]/60 grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
+        {/* Dynamic Analog/Radial Risk Gauge (Cols 1-4) */}
+        <div className="lg:col-span-4 rounded-lg border border-[#1E293B] bg-[#101622] p-2 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[10px] text-gray-300 font-bold px-1">
+            <span>Dynamic Bayes Risk Gauge</span>
+            <span
+              className={`text-[9px] px-1.5 py-0.5 rounded border ${
+                isLocal
+                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                  : 'text-red-400 bg-red-500/10 border-red-500/30'
+              }`}
+            >
+              {isLocal ? `R(x)=${riskResults.minRisk.toFixed(3)} < θ` : `R(x)=${riskResults.minRisk.toFixed(3)} ≥ θ`}
+            </span>
+          </div>
+          <div className="h-36 w-full">
+            <PlotlyChart data={gaugeData} layout={gaugeLayout} />
+          </div>
+          <div className="text-[9px] text-gray-400 text-center">
+            Gold Marker = Deferral Threshold (θ = {riskThreshold.toFixed(2)})
+          </div>
+        </div>
+
+        {/* Horizontal Probability Distribution Bars (Cols 5-12) */}
+        <div className="lg:col-span-8 rounded-lg border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[10px] text-gray-300 font-bold mb-1">
+            <span>Calibrated Probability Distribution P_T(y_j|x) [%]</span>
+            <span className="text-cyan-400 text-[9px]">8 Machinery States • T = {temperatureT.toFixed(2)}</span>
+          </div>
+          <div className="space-y-1.5 flex-1 flex flex-col justify-center">
+            {MOTOR_STATES.map((stateName, idx) => {
+              const probVal = (calResults.calibratedProbabilities[idx] || 0) * 100;
+              const isDominant = probVal > 25.0;
+              return (
+                <div key={stateName} className="flex items-center gap-2 text-[10px]">
+                  <div className={`w-32 truncate ${isDominant ? 'text-white font-bold' : 'text-gray-400'}`}>
+                    {stateName}:
+                  </div>
+                  <div className="flex-1 bg-[#07090C] rounded-full h-2 overflow-hidden border border-[#1E293B]">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        isDominant
+                          ? idx === 0
+                            ? 'bg-emerald-500'
+                            : 'bg-red-500'
+                          : 'bg-cyan-500/50'
+                      }`}
+                      style={{ width: `${probVal.toFixed(1)}%` }}
+                    />
+                  </div>
+                  <div className={`w-12 text-right font-mono ${isDominant ? 'text-white font-bold' : 'text-gray-400'}`}>
+                    {probVal.toFixed(1)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* EXPANDABLE MATHEMATICAL DRAWER */}

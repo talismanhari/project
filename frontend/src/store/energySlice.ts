@@ -38,27 +38,20 @@ export const energySlice = createSlice({
 
       state.lastDecision = decision;
 
-      // Kumar et al. (2026 Base Paper) Stochastic 92.4% Offload Model:
-      // ~11 out of 12 seconds it wakes Wi-Fi (~1490 - 1525 mJ)
-      // ~1 out of 12 seconds it resolves locally (~2.2 mJ)
-      const isKumarOffload = (windowIdx % 12 !== 5); // 11/12 = 91.7% ~ 92.4%
-      const kumarDelta = isKumarOffload
-        ? 1490.0 + (windowIdx % 7) * 5.0 + Math.sin(windowIdx) * 6.0
-        : 2.2 + (windowIdx % 3) * 0.2;
-      
+      // Stage 5 Dual Energy Profiler Modeling:
+      // Baseline (Always Cloud): Continuous linear accumulation E_baseline(t) = t * 1.5 J/s (1500 mJ/s)
+      const kumarDelta = 1500.0;
       state.baselineCumulative_mJ += kumarDelta;
 
-      // TinyDefer Energy Modeling:
-      // LOCAL: ~0.50 mJ with realistic +/- 0.04 mJ ADC shunt jitter (0.48 - 0.54 mJ)
-      // OFFLOAD: ~1500 mJ with realistic Wi-Fi RF burst jitter (1495 - 1515 mJ)
-      // FAILSAFE: 0.50 mJ local fail-safe execution (Wi-Fi link forced OFF)
-      let tinyDeferDelta = 0.50;
+      // Pure Edge Inference: P_ESP32 * dt_infer = 3.3V * 95mA * 65ms = 20.4 mJ
+      // Deferred Offload: 20.4 mJ + (3.3V * 320mA * 1400ms) = 1500 mJ
+      let tinyDeferDelta = 20.4;
       if (decision === 'OFFLOAD_CLOUD') {
-        tinyDeferDelta = 1500.0 + (windowIdx % 5) * 3.5 + Math.cos(windowIdx) * 4.0;
+        tinyDeferDelta = 1500.0 + (windowIdx % 5) * 3.5;
       } else {
-        // Local execution (nominal or fail-safe): 0.50 mJ +/- 0.04 mJ jitter
-        const adcNoise = ((windowIdx * 17) % 9 - 4) * 0.01;
-        tinyDeferDelta = Number((0.50 + adcNoise).toFixed(3));
+        // Local execution (nominal or fail-safe): 20.4 mJ +/- 0.35 mJ shunt jitter
+        const adcNoise = ((windowIdx * 17) % 9 - 4) * 0.08;
+        tinyDeferDelta = Number((20.4 + adcNoise).toFixed(2));
       }
       state.tinyDeferCumulative_mJ += tinyDeferDelta;
 
@@ -69,10 +62,10 @@ export const energySlice = createSlice({
         decision,
         minRisk,
         threshold,
-        tinyDeferEnergy: Number(tinyDeferDelta.toFixed(3)),
+        tinyDeferEnergy: Number(tinyDeferDelta.toFixed(2)),
         baselineEnergy: Number(kumarDelta.toFixed(1)),
-        cumulativeTinyDefer: Number(state.tinyDeferCumulative_mJ.toFixed(2)),
-        cumulativeBaseline: Number(state.baselineCumulative_mJ.toFixed(1)),
+        cumulativeTinyDefer: Number((state.tinyDeferCumulative_mJ / 1000.0).toFixed(3)), // in Joules
+        cumulativeBaseline: Number((state.baselineCumulative_mJ / 1000.0).toFixed(3)),   // in Joules
         isFailSafeActive,
       };
 
