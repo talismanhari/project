@@ -26,12 +26,11 @@ PORT = int(os.getenv("PORT", "8000"))
 COM_PORT = os.getenv("ESP32_COM_PORT", "COM7")
 BAUD_RATE = int(os.getenv("ESP32_BAUD_RATE", "115200"))
 FORCE_DEVICE = os.getenv("DEVICE", "auto")
-RISK_THRESHOLD = float(os.getenv("RISK_THRESHOLD", "1.70"))
+RISK_THRESHOLD = float(os.getenv("RISK_THRESHOLD", "1.65"))
 
-# Hysteresis state for Schmitt trigger deferral gate
-_ema_risk = 0.355
+# 5-sample rolling median history & hysteresis Schmitt trigger
+_risk_history = [0.355] * 5
 _deferred_state = False
-_consec_fault_count = 0
 
 if TORCH_AVAILABLE and torch is not None:
     if FORCE_DEVICE == "cpu":
@@ -262,51 +261,54 @@ class SimRequest(BaseModel):
     outage_failsafe: Optional[bool] = False
 
 def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outage: bool = False):
-    global _ema_risk, _deferred_state, _consec_fault_count
-    is_severe = (mode == "MODE_2_SEVERE")
+    global _risk_history, _deferred_state
+    # Check if mode is nominal (accepts "MODE_1_NORMAL", "1", 1)
+    is_nominal = (mode in ["MODE_1_NORMAL", "1", 1])
     N = 1024
     t = np.linspace(0.0, 1.0, N, endpoint=False)
 
-    if not is_severe:
-        # Healthy nominal dynamics
-        ax = 0.55 * np.sin(2 * np.pi * 29.5 * t) + 0.12 * np.random.randn(N)
-        ay = 0.42 * np.cos(2 * np.pi * 29.5 * t) + 0.10 * np.random.randn(N)
-        az = 9.81 + 0.35 * np.sin(2 * np.pi * 29.5 * t) + 0.15 * np.random.randn(N)
-        acoustic = 0.05 * np.sin(2 * np.pi * 120.0 * t) + 0.015 * np.random.randn(N)
+    if is_nominal:
+        # Healthy nominal dynamics - injected fault amplitude STRICTLY 0.0
+        ax = 0.55 * np.sin(2 * np.pi * 29.5 * t) + 0.08 * np.random.randn(N)
+        ay = 0.42 * np.cos(2 * np.pi * 29.5 * t) + 0.08 * np.random.randn(N)
+        az = 9.81 + 0.25 * np.sin(2 * np.pi * 29.5 * t) + 0.10 * np.random.randn(N)
+        acoustic = 0.04 * np.sin(2 * np.pi * 120.0 * t) + 0.01 * np.random.randn(N)
 
-        probs = [0.942, 0.015, 0.010, 0.008, 0.012, 0.005, 0.005, 0.003]
+        probs = [0.965, 0.005, 0.005, 0.005, 0.008, 0.004, 0.004, 0.004]
         costs = [0.0, 10.0, 10.0, 10.0, 1.0, 1.0, 1.0, 1.0]
         weighted_risks = [round(float(p * c), 4) for p, c in zip(probs, costs)]
-        total_risk = round(float(sum(weighted_risks)), 3)
+        raw_risk = round(float(sum(weighted_risks)), 3)
 
-        _ema_risk = 0.75 * _ema_risk + 0.25 * total_risk
-        if _ema_risk < 1.15:
-            _consec_fault_count = 0
-            _deferred_state = False
-        total_risk = round(_ema_risk, 3)
+        # Cap Nominal Risk: Clamp calculated risk in Nominal mode to max 0.45
+        raw_risk = min(0.45, raw_risk)
+        _risk_history.append(raw_risk)
+        _risk_history = _risk_history[-5:]
+        risk_final = float(np.median(_risk_history))
+        risk_final = min(0.45, risk_final)
 
+        _deferred_state = False
+        defer = False
+        total_risk = round(risk_final, 3)
         action = "EDGE"
         predicted_class = "Healthy"
-        confidence = 94.2
-        defer = False
+        confidence = 96.5
         verdict = "PROCESSED_ON_EDGE"
         float_vals = [0.065, 2.40, 2.80, 0.05, 0.42, 0.04, 0.03, 0.85, 220.0, 0.08, 2.10, 0.50]
         int8_vals = [8, 12, 18, 2, 14, 3, 2, 24, 18, 4, 32, 2]
     else:
-        # Duty cycle / transient fault pulse (16-window periodic cycle: ~8s burst then decay)
-        pulse_phase = float(np.sin(2.0 * np.pi * (window_idx / 16.0)))
-        # Soften defect harmonic amplitude (BPFO / 104 Hz component) — reduced to ~1.15x-1.25x baseline
-        bpfo_amp_scale = 1.15 + 0.10 * pulse_phase
-
-        # Shaft baseline vibration (4.5 m/s^2) remains dominant over defect harmonics
-        ax = 4.5 * np.sin(2 * np.pi * 29.5 * t) + (4.5 * 0.32 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.35 * np.random.randn(N)
-        ay = 3.8 * np.cos(2 * np.pi * 29.5 * t) + (3.8 * 0.28 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.30 * np.random.randn(N)
-        az = 9.81 + (2.0 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.45 * np.random.randn(N)
+        # Fault Mode: defect harmonic amplitude set to 1.2x baseline (not 2.5x)
+        bpfo_amp_scale = 1.20
+        pulse_phase = float(np.sin(2.0 * np.pi * (window_idx / 12.0)))
+        ax = 4.5 * np.sin(2 * np.pi * 29.5 * t) + (4.5 * 0.32 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.30 * np.random.randn(N)
+        ay = 3.8 * np.cos(2 * np.pi * 29.5 * t) + (3.8 * 0.28 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.25 * np.random.randn(N)
+        az = 9.81 + (2.0 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.35 * np.random.randn(N)
         acoustic = 0.15 * bpfo_amp_scale * np.sin(2 * np.pi * 104.2 * t) + 0.03 * np.random.randn(N)
 
-        # In Fault mode, raw risk metric oscillates with anomaly bursts
-        target_risk = round(float(1.48 + 0.58 * pulse_phase + np.random.uniform(-0.02, 0.02)), 3)
-        total_risk = max(0.85, min(2.10, target_risk))
+        # Fault risk calculation with 5-sample rolling median filter
+        raw_risk = round(float(1.38 + 0.45 * pulse_phase + np.random.uniform(-0.02, 0.02)), 3)
+        _risk_history.append(raw_risk)
+        _risk_history = _risk_history[-5:]
+        risk_final = float(np.median(_risk_history))
 
         p_fault = round(max(0.42, min(0.66, 0.54 + 0.10 * pulse_phase)), 3)
         p_healthy = round(max(0.10, 1.0 - p_fault - 0.22), 3)
@@ -320,18 +322,15 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         predicted_class = "Outer Race (BPFO)"
         confidence = round(p_fault * 100.0, 1)
 
-        # --- Hysteresis Schmitt Trigger with EMA smoothing ---
-        _ema_risk = 0.75 * _ema_risk + 0.25 * total_risk
-        if _ema_risk > 1.70:
-            _consec_fault_count += 1
-            if _consec_fault_count >= 3 and not outage:
-                _deferred_state = True
-        elif _ema_risk < 1.15:
-            _consec_fault_count = 0
+        # Schmitt trigger hysteresis:
+        # Defer to Cloud ONLY if risk > 1.65. Return to Local Edge ONLY if risk < 1.10.
+        # In-between [1.10, 1.65], preserve active state.
+        if risk_final > 1.65:
+            _deferred_state = True
+        elif risk_final < 1.10:
             _deferred_state = False
-        # In deadband [1.15, 1.70]: hold _deferred_state unchanged
 
-        total_risk = round(_ema_risk, 3)
+        total_risk = round(risk_final, 3)
         defer = _deferred_state and not outage
 
         if outage:
