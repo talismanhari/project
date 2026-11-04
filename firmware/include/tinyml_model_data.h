@@ -15,7 +15,7 @@
 
 // Calibration & Bayes Risk Threshold Parameters
 static const float calibration_temperature = 1.45f;
-static const float DEFERRAL_THRESHOLD = 1.20f;
+static const float DEFERRAL_THRESHOLD = 1.65f;
 
 // Normalization Vectors
 static const float feature_means[NUM_DSP_FEATURES] = {

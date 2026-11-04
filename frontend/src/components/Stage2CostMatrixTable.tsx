@@ -26,8 +26,8 @@ export const Stage2CostMatrixTable: React.FC = () => {
       costs,
       weighted_risks,
       total_risk,
-      threshold: 1.20,
-      verdict: total_risk > 1.20 ? 'DEFERRED_TO_RTX3050' : 'PROCESSED_ON_EDGE',
+      threshold: 1.65,
+      verdict: total_risk > 1.65 ? 'DEFERRED_TO_RTX3050' : 'PROCESSED_ON_EDGE',
     };
   }, [telemetryData]);
 
@@ -52,7 +52,7 @@ export const Stage2CostMatrixTable: React.FC = () => {
                 : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
             }`}
           >
-            {isDeferred ? 'R > 1.20 (DEFER)' : 'R ≤ 1.20 (SAFE)'}
+            {isDeferred ? 'R > 1.65 (DEFER)' : 'R ≤ 1.65 (SAFE)'}
           </span>
         </div>
       </div>
@@ -114,7 +114,7 @@ export const Stage2CostMatrixTable: React.FC = () => {
           <span>Total Bayes Risk: R = ∑ C(a, y) · P(y|x)</span>
         </div>
         <div className="font-extrabold text-xs">
-          R = {costData.total_risk.toFixed(3)} {isDeferred ? '> 1.20 [CLOUD DEFERRAL]' : '≤ 1.20 [LOCAL SAFE]'}
+          R = {costData.total_risk.toFixed(3)} {isDeferred ? '> 1.65 [CLOUD DEFERRAL]' : '≤ 1.65 [LOCAL SAFE]'}
         </div>
       </div>
     </div>

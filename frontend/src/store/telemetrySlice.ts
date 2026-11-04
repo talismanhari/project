@@ -21,7 +21,7 @@ const initialState: TelemetryState = {
   isStreaming: true,
   streamTick: 1,
   temperatureT: 1.45,
-  riskThreshold: 1.20,
+  riskThreshold: 1.65,
   isOutageFailSafe: false,
   telemetryData: null,
   isLoading: false,

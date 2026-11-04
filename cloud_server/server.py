@@ -26,6 +26,7 @@ PORT = int(os.getenv("PORT", "8000"))
 COM_PORT = os.getenv("ESP32_COM_PORT", "COM7")
 BAUD_RATE = int(os.getenv("ESP32_BAUD_RATE", "115200"))
 FORCE_DEVICE = os.getenv("DEVICE", "auto")
+RISK_THRESHOLD = float(os.getenv("RISK_THRESHOLD", "1.65"))
 
 if TORCH_AVAILABLE and torch is not None:
     if FORCE_DEVICE == "cpu":
@@ -156,7 +157,7 @@ async def serial_listener():
                             parsed = json.loads(decoded)
                             dec = parsed.get("decision", {})
                             risk_val = float(dec.get("risk_score", 0.14))
-                            defer = (risk_val > 1.20) or dec.get("defer_to_cloud", False) or dec.get("action") == "CLOUD"
+                            defer = (risk_val > RISK_THRESHOLD) or dec.get("defer_to_cloud", False) or dec.get("action") == "CLOUD"
 
                             raw_wave = parsed.get("raw_waveform", [])
                             if len(raw_wave) == 0 and "acquisition" in parsed:
@@ -196,7 +197,7 @@ async def serial_listener():
                                         "costs": c,
                                         "weighted_risks": w,
                                         "total_risk": round(sum(w), 3),
-                                        "threshold": 1.20,
+                                        "threshold": RISK_THRESHOLD,
                                         "verdict": "PROCESSED_ON_EDGE"
                                     }
                                 else:
@@ -209,7 +210,7 @@ async def serial_listener():
                                         "costs": c,
                                         "weighted_risks": w,
                                         "total_risk": round(sum(w), 3),
-                                        "threshold": 1.20,
+                                        "threshold": RISK_THRESHOLD,
                                         "verdict": "DEFERRED_TO_RTX3050"
                                     }
 
@@ -280,29 +281,47 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         float_vals = [0.065, 2.40, 2.80, 0.05, 0.42, 0.04, 0.03, 0.85, 220.0, 0.08, 2.10, 0.50]
         int8_vals = [8, 12, 18, 2, 14, 3, 2, 24, 18, 4, 32, 2]
     else:
-        # Severe fault dynamics: BPFO 104.2 Hz + 2X harmonic 208.4 Hz
-        ax = 4.2 * np.sin(2 * np.pi * 29.5 * t) + 8.8 * np.sin(2 * np.pi * 104.2 * t) + 0.8 * np.random.randn(N)
-        ay = 3.6 * np.cos(2 * np.pi * 29.5 * t) + 6.4 * np.sin(2 * np.pi * 104.2 * t) + 0.7 * np.random.randn(N)
-        az = 9.81 + 5.2 * np.sin(2 * np.pi * 104.2 * t) + 0.9 * np.random.randn(N)
-        acoustic = 0.45 * np.sin(2 * np.pi * 104.2 * t) + 0.28 * np.sin(2 * np.pi * 208.4 * t) + 0.06 * np.random.randn(N)
+        # Duty cycle / transient fault pulse (6-window periodic cycle: ~3s burst then decay)
+        pulse_phase = float(np.sin(2.0 * np.pi * (window_idx / 6.0)))
+        # Soften defect harmonic amplitude (BPFO / 104 Hz component) down by 40% (multiplier ~1.15x - 1.30x)
+        bpfo_amp_scale = 1.15 + 0.20 * pulse_phase
 
-        probs = [0.020, 0.680, 0.180, 0.080, 0.010, 0.010, 0.010, 0.010]
+        # Shaft baseline vibration (4.5 m/s^2) remains dominant over defect harmonics
+        ax = 4.5 * np.sin(2 * np.pi * 29.5 * t) + (4.5 * 0.32 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.35 * np.random.randn(N)
+        ay = 3.8 * np.cos(2 * np.pi * 29.5 * t) + (3.8 * 0.28 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.30 * np.random.randn(N)
+        az = 9.81 + (2.0 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.45 * np.random.randn(N)
+        acoustic = 0.15 * bpfo_amp_scale * np.sin(2 * np.pi * 104.2 * t) + 0.03 * np.random.randn(N)
+
+        # In Fault mode, risk meter hovers dynamically around 1.30–1.75
+        # causing Decision Highway to toggle dynamically between EDGE and CLOUD
+        target_risk = round(float(1.52 + 0.22 * pulse_phase + np.random.uniform(-0.02, 0.02)), 3)
+        total_risk = max(1.30, min(1.75, target_risk))
+
+        p_fault = round(max(0.42, min(0.66, 0.54 + 0.10 * pulse_phase)), 3)
+        p_healthy = round(max(0.10, 1.0 - p_fault - 0.22), 3)
+        probs = [p_healthy, p_fault, 0.140, 0.060, 0.010, 0.005, 0.003, 0.002]
+        s_prob = sum(probs)
+        probs = [round(p / s_prob, 3) for p in probs]
+
         costs = [1.0, 0.0, 6.0, 6.0, 2.5, 2.5, 2.5, 2.5]
         weighted_risks = [round(float(p * c), 4) for p, c in zip(probs, costs)]
-        total_risk = round(float(sum(weighted_risks)), 3)
 
         predicted_class = "Outer Race (BPFO)"
-        confidence = 68.0
+        confidence = round(p_fault * 100.0, 1)
+
+        defer = (total_risk > RISK_THRESHOLD) and not outage
         if outage:
             action = "EDGE_FAILSAFE"
-            defer = False
             verdict = "PROCESSED_ON_EDGE"
-        else:
+        elif defer:
             action = "CLOUD"
-            defer = True
             verdict = "DEFERRED_TO_RTX3050"
-        float_vals = [0.280, 4.80, 6.50, 0.85, 2.20, 0.78, 0.08, 0.40, 480.0, 0.42, 2.35, 3.20]
-        int8_vals = [42, 68, 92, 15, 74, 98, 8, 12, 54, 48, 38, 14]
+        else:
+            action = "EDGE"
+            verdict = "PROCESSED_ON_EDGE"
+
+        float_vals = [0.180, 3.80, 4.60, 0.45, 1.60, round(0.48 * bpfo_amp_scale, 2), 0.05, 0.55, 340.0, 0.28, 2.25, 1.80]
+        int8_vals = [28, 48, 62, 8, 46, int(60 * bpfo_amp_scale), 5, 18, 36, 28, 34, 8]
 
     step = max(1, N // 100)
     times_100 = [round(float(v), 3) for v in t[::step]]
@@ -349,7 +368,7 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
             "costs": costs,
             "weighted_risks": weighted_risks,
             "total_risk": total_risk,
-            "threshold": 1.20,
+            "threshold": RISK_THRESHOLD,
             "verdict": verdict
         },
         "spectrogram": spec,
@@ -374,7 +393,7 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         "decision": {
             "action": action,
             "risk_score": total_risk,
-            "threshold": 1.20,
+            "threshold": RISK_THRESHOLD,
             "predicted_class": predicted_class,
             "confidence": confidence,
             "defer_to_cloud": defer

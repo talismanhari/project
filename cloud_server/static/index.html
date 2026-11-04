@@ -120,7 +120,7 @@
         <div class="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
           <span class="text-[11px] font-bold text-white tracking-wider uppercase">STAGE 2: ASYMMETRIC BAYES RISK CALCULATION</span>
           <span id="riskVerdictBadge" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-            R ≤ 1.20 (SAFE)
+            R ≤ 1.65 (SAFE)
           </span>
         </div>
         <div class="flex-1 overflow-y-auto my-1 border border-[#1E293B] rounded-lg bg-[#101622]">
@@ -140,7 +140,7 @@
         </div>
         <div id="costTotalRow" class="shrink-0 flex items-center justify-between p-1.5 rounded-lg border text-[11px] font-mono bg-emerald-500/15 border-emerald-500/40 text-emerald-200">
           <span class="font-bold">Total Bayes Risk: R = ∑ C(a, y) · P(y|x)</span>
-          <span id="costTotalText" class="font-extrabold text-xs">R = 0.370 ≤ 1.20 [LOCAL SAFE]</span>
+          <span id="costTotalText" class="font-extrabold text-xs">R = 0.370 ≤ 1.65 [LOCAL SAFE]</span>
         </div>
       </div>
     </div>
@@ -153,7 +153,7 @@
           STAGE 3: DECISION HIGHWAY (BAYES ASYMMETRIC RISK GATE)
         </span>
         <span class="text-[10px] text-gray-400">
-          Boundary: <strong class="text-amber-400">θ = 1.20</strong> • Calibration Temp: <strong class="text-cyan-400">T = 1.45</strong>
+          Boundary: <strong class="text-amber-400">θ = 1.65</strong> • Calibration Temp: <strong class="text-cyan-400">T = 1.45</strong>
         </span>
       </div>
 
@@ -175,10 +175,10 @@
 
             <div>
               <div id="decision-subtitle" class="text-xs font-sans text-emerald-200 mt-1 truncate">
-                Risk: 0.142 below θ = 1.20 threshold • Local model confident • Zero cloud latency • 0.50 mJ Local
+                Risk: 0.142 below θ = 1.65 threshold • Local model confident • Zero cloud latency • 0.50 mJ Local
               </div>
               <div class="flex items-center gap-4 text-[10px] text-gray-400 font-mono mt-3 pt-2 border-t border-[#1E293B]/60">
-                <span>Gate: <strong class="text-white font-sans">θ = 1.20</strong></span>
+                <span>Gate: <strong class="text-white font-sans">θ = 1.65</strong></span>
                 <span>Latency: <strong class="text-emerald-400 font-sans">&lt; 0.5 ms</strong></span>
                 <span>Energy: <strong class="text-emerald-400 font-sans">0.50 mJ</strong></span>
                 <span>Target: <strong class="text-cyan-400 font-sans">ESP32-S3 INT8</strong></span>
@@ -192,19 +192,19 @@
           <div class="rounded-xl border border-[#1E293B] bg-[#101622] p-3 flex flex-col justify-between items-center" style="height: 180px; min-height: 180px; max-height: 180px; overflow: hidden; contain: paint layout size; transform: translateZ(0);">
             <div class="w-full flex items-center justify-between text-[10px] text-gray-400 shrink-0">
               <span class="font-bold uppercase tracking-wider text-white">Bayes Risk Dial R(x)</span>
-              <span class="text-[9px] text-amber-400 font-mono font-bold">θ = 1.20</span>
+              <span class="text-[9px] text-amber-400 font-mono font-bold">θ = 1.65</span>
             </div>
 
             <!-- Inline SVG Gauge Dial -->
             <div class="flex-1 w-full flex items-center justify-center relative">
               <svg viewBox="0 0 200 115" class="w-full max-h-[110px] overflow-visible">
-                <!-- Safe Arc (0.0 to 1.20 -> angle -90 to -18 deg) -->
-                <path d="M 30 100 A 70 70 0 0 1 78.4 33.4" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round" opacity="0.85" />
-                <!-- Deferral Arc (1.20 to 3.0 -> angle -18 to +90 deg) -->
-                <path d="M 78.4 33.4 A 70 70 0 0 1 170 100" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round" opacity="0.85" />
-                <!-- Threshold Marker Tick at -18 deg -->
-                <line x1="75.6" y1="24" x2="80.6" y2="40" stroke="#f59e0b" stroke-width="3" />
-                <text x="64" y="19" fill="#f59e0b" font-size="8" font-family="JetBrains Mono" font-weight="bold">θ=1.20</text>
+                <!-- Safe Arc (0.0 to 1.65 -> angle -90 to +9 deg) -->
+                <path d="M 30 100 A 70 70 0 0 1 111.0 30.9" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round" opacity="0.85" />
+                <!-- Deferral Arc (1.65 to 3.0 -> angle +9 to +90 deg) -->
+                <path d="M 111.0 30.9 A 70 70 0 0 1 170 100" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round" opacity="0.85" />
+                <!-- Threshold Marker Tick at +9 deg -->
+                <line x1="111.9" y1="24.9" x2="109.4" y2="40.7" stroke="#f59e0b" stroke-width="3" />
+                <text x="102" y="20" fill="#f59e0b" font-size="8" font-family="JetBrains Mono" font-weight="bold">θ=1.65</text>
                 <!-- Scale Numbers -->
                 <text x="22" y="112" fill="#64748B" font-size="8" font-family="JetBrains Mono">0.0</text>
                 <text x="165" y="112" fill="#64748B" font-size="8" font-family="JetBrains Mono">3.0</text>
@@ -219,7 +219,7 @@
             <div class="w-full flex items-center justify-between text-[11px] font-mono shrink-0 pt-1 border-t border-[#1E293B]">
               <span class="text-gray-400">Score:</span>
               <span id="gauge-risk-value" class="font-bold text-sm font-mono" style="color: #10b981;">0.142</span>
-              <span class="text-[9px] text-gray-500">Safe: [0 - 1.20]</span>
+              <span class="text-[9px] text-gray-500">Safe: [0 - 1.65]</span>
             </div>
           </div>
         </div>
@@ -359,10 +359,10 @@
             borderwidth: 1,
             bordercolor: '#1E293B',
             steps: [
-              { range: [0, 1.20], color: 'rgba(16, 185, 129, 0.22)' },
-              { range: [1.20, 3.0], color: 'rgba(239, 68, 68, 0.28)' }
+              { range: [0, 1.65], color: 'rgba(16, 185, 129, 0.22)' },
+              { range: [1.65, 3.0], color: 'rgba(239, 68, 68, 0.28)' }
             ],
-            threshold: { line: { color: '#F59E0B', width: 4 }, thickness: 0.85, value: 1.20 }
+            threshold: { line: { color: '#F59E0B', width: 4 }, thickness: 0.85, value: 1.65 }
           }
         }], {
           ...basePlotLayout,
@@ -459,7 +459,7 @@
       const costs = costTable.costs || [];
       const wRisks = costTable.weighted_risks || [];
       const totalR = costTable.total_risk || (data.decision?.risk_score || 0.142);
-      const isDef = totalR > 1.20;
+      const isDef = totalR > 1.65;
 
       const tBody = document.getElementById('costTableBody');
       tBody.innerHTML = '';
@@ -483,14 +483,14 @@
       const rText = document.getElementById('costTotalText');
       if (isDef) {
         rBadge.className = 'px-2 py-0.2 rounded-full text-[9px] font-bold bg-red-500/20 text-red-400 border border-red-500/40';
-        rBadge.innerText = 'R > 1.20 (DEFER)';
+        rBadge.innerText = 'R > 1.65 (DEFER)';
         rRow.className = 'shrink-0 flex items-center justify-between p-1.5 rounded-lg border text-[11px] font-mono bg-red-500/15 border-red-500/40 text-red-200';
-        rText.innerText = `R = ${totalR.toFixed(3)} > 1.20 [CLOUD DEFERRAL]`;
+        rText.innerText = `R = ${totalR.toFixed(3)} > 1.65 [CLOUD DEFERRAL]`;
       } else {
         rBadge.className = 'px-2 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
-        rBadge.innerText = 'R ≤ 1.20 (SAFE)';
+        rBadge.innerText = 'R ≤ 1.65 (SAFE)';
         rRow.className = 'shrink-0 flex items-center justify-between p-1.5 rounded-lg border text-[11px] font-mono bg-emerald-500/15 border-emerald-500/40 text-emerald-200';
-        rText.innerText = `R = ${totalR.toFixed(3)} ≤ 1.20 [LOCAL SAFE]`;
+        rText.innerText = `R = ${totalR.toFixed(3)} ≤ 1.65 [LOCAL SAFE]`;
       }
 
       // 3. Stage 3 Decision Highway Banner & Dial (Bulletproof extraction & SVG needle update)
@@ -501,7 +501,7 @@
         data?.risk?.score ??
         0.355
       );
-      const isDeferred = risk > 1.20 || data?.decision?.action === "DEFER_TO_CLOUD" || data?.mode === 2;
+      const isDeferred = risk > 1.65 || data?.decision?.action === "DEFER_TO_CLOUD" || data?.decision?.action === "CLOUD" || data?.cost_table?.verdict === "DEFERRED_TO_RTX3050";
 
       const banner = document.getElementById("decision-banner");
       const badge = document.getElementById("decision-badge");
@@ -520,7 +520,7 @@
           }
           title.innerText = "[ HIGH UNCERTAINTY: DEFERRING TO RTX 3050 CLOUD ]";
           if (subtitle) {
-            subtitle.innerText = `Risk: ${risk.toFixed(3)} exceeds θ = 1.20 boundary • Payload deferred to CUDA for STFT validation`;
+            subtitle.innerText = `Risk: ${risk.toFixed(3)} exceeds θ = 1.65 boundary • Payload deferred to CUDA for STFT validation`;
           }
           if (gaugeVal) {
             gaugeVal.innerText = risk.toFixed(3);
@@ -535,7 +535,7 @@
           }
           title.innerText = "[ PROCESSED ON EDGE: 100% LOCAL INFERENCE ]";
           if (subtitle) {
-            subtitle.innerText = `Risk: ${risk.toFixed(3)} below θ = 1.20 threshold • Local model confident • Zero cloud latency`;
+            subtitle.innerText = `Risk: ${risk.toFixed(3)} below θ = 1.65 threshold • Local model confident • Zero cloud latency`;
           }
           if (gaugeVal) {
             gaugeVal.innerText = risk.toFixed(3);
@@ -561,10 +561,10 @@
             borderwidth: 1,
             bordercolor: '#1E293B',
             steps: [
-              { range: [0, 1.20], color: 'rgba(16, 185, 129, 0.22)' },
-              { range: [1.20, 3.0], color: 'rgba(239, 68, 68, 0.28)' }
+              { range: [0, 1.65], color: 'rgba(16, 185, 129, 0.22)' },
+              { range: [1.65, 3.0], color: 'rgba(239, 68, 68, 0.28)' }
             ],
-            threshold: { line: { color: '#F59E0B', width: 4 }, thickness: 0.85, value: 1.20 }
+            threshold: { line: { color: '#F59E0B', width: 4 }, thickness: 0.85, value: 1.65 }
           }
         }], {
           ...basePlotLayout,

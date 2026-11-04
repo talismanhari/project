@@ -20,11 +20,10 @@ export const Stage3DecisionHighway: React.FC = () => {
 
   const isDeferred = useMemo(() => {
     return (
-      risk > 1.20 ||
+      risk > 1.65 ||
       telemetryData?.decision?.action === 'DEFER_TO_CLOUD' ||
       telemetryData?.decision?.action === 'CLOUD' ||
-      telemetryData?.cost_table?.verdict === 'DEFERRED_TO_RTX3050' ||
-      (telemetryData as any)?.mode === 2
+      telemetryData?.cost_table?.verdict === 'DEFERRED_TO_RTX3050'
     );
   }, [risk, telemetryData]);
 
@@ -52,7 +51,7 @@ export const Stage3DecisionHighway: React.FC = () => {
           STAGE 3: DECISION HIGHWAY (BAYES ASYMMETRIC RISK GATE)
         </span>
         <span className="text-[10px] text-gray-400">
-          Boundary: <strong className="text-amber-400">θ = 1.20</strong> • Temp: <strong className="text-cyan-400">T = 1.45</strong>
+          Boundary: <strong className="text-amber-400">θ = 1.65</strong> • Temp: <strong className="text-cyan-400">T = 1.45</strong>
         </span>
       </div>
 
@@ -136,15 +135,15 @@ export const Stage3DecisionHighway: React.FC = () => {
                 }}
               >
                 {isDeferred
-                  ? `Risk: ${risk.toFixed(3)} exceeds θ = 1.20 boundary • Payload deferred to CUDA for STFT validation`
+                  ? `Risk: ${risk.toFixed(3)} exceeds θ = 1.65 boundary • Payload deferred to CUDA for STFT validation`
                   : isFailsafe
                   ? `Risk: ${risk.toFixed(3)} | Wi-Fi dropped | Fallback prevents flatline • 0.50 mJ energy enforced`
-                  : `Risk: ${risk.toFixed(3)} below θ = 1.20 threshold • Local model confident • Zero cloud latency`}
+                  : `Risk: ${risk.toFixed(3)} below θ = 1.65 threshold • Local model confident • Zero cloud latency`}
               </div>
 
               <div className="flex items-center gap-4 text-[10px] text-gray-400 font-mono mt-3 pt-2 border-t border-[#1E293B]/60">
                 <span>
-                  Gate: <strong className="text-white font-sans">θ = 1.20</strong>
+                  Gate: <strong className="text-white font-sans">θ = 1.65</strong>
                 </span>
                 <span>
                   Latency:{' '}
@@ -184,34 +183,34 @@ export const Stage3DecisionHighway: React.FC = () => {
           >
             <div className="w-full flex items-center justify-between text-[10px] text-gray-400 shrink-0">
               <span className="font-bold uppercase tracking-wider text-white">Bayes Risk Dial R(x)</span>
-              <span className="text-[9px] text-amber-400 font-mono font-bold">θ = 1.20</span>
+              <span className="text-[9px] text-amber-400 font-mono font-bold">θ = 1.65</span>
             </div>
 
             {/* Inline SVG Gauge Dial */}
             <div className="flex-1 w-full flex items-center justify-center relative">
               <svg viewBox="0 0 200 115" className="w-full max-h-[110px] overflow-visible">
-                {/* Safe Arc (0.0 to 1.20 -> angle -90 to -18 deg) */}
+                {/* Safe Arc (0.0 to 1.65 -> angle -90 to +9 deg) */}
                 <path
-                  d="M 30 100 A 70 70 0 0 1 78.4 33.4"
+                  d="M 30 100 A 70 70 0 0 1 111.0 30.9"
                   fill="none"
                   stroke="#10b981"
                   strokeWidth="12"
                   strokeLinecap="round"
                   opacity="0.85"
                 />
-                {/* Deferral Arc (1.20 to 3.0 -> angle -18 to +90 deg) */}
+                {/* Deferral Arc (1.65 to 3.0 -> angle +9 to +90 deg) */}
                 <path
-                  d="M 78.4 33.4 A 70 70 0 0 1 170 100"
+                  d="M 111.0 30.9 A 70 70 0 0 1 170 100"
                   fill="none"
                   stroke="#ef4444"
                   strokeWidth="12"
                   strokeLinecap="round"
                   opacity="0.85"
                 />
-                {/* Threshold Marker Tick at -18 deg */}
-                <line x1="75.6" y1="24" x2="80.6" y2="40" stroke="#f59e0b" strokeWidth="3" />
-                <text x="64" y="19" fill="#f59e0b" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                  θ=1.20
+                {/* Threshold Marker Tick at +9 deg */}
+                <line x1="111.9" y1="24.9" x2="109.4" y2="40.7" stroke="#f59e0b" strokeWidth="3" />
+                <text x="102" y="20" fill="#f59e0b" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                  θ=1.65
                 </text>
                 {/* Scale Numbers */}
                 <text x="22" y="112" fill="#64748B" fontSize="8" fontFamily="JetBrains Mono">
@@ -248,7 +247,7 @@ export const Stage3DecisionHighway: React.FC = () => {
               >
                 {risk.toFixed(3)}
               </span>
-              <span className="text-[9px] text-gray-500">Safe: [0 - 1.20]</span>
+              <span className="text-[9px] text-gray-500">Safe: [0 - 1.65]</span>
             </div>
           </div>
         </div>

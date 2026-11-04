@@ -139,12 +139,15 @@ void TaskCore0_DSP(void *pvParameters) {
                 delayMicroseconds(312);
             }
         } else {
-            // Physics stream: 1X shaft (29.5 Hz) + Outer Race defect (104.2 Hz) + noise
+            // Physics stream: 1X shaft (29.5 Hz) + transient defect pulses (104.2 Hz) + noise
             float global_t = (float)window_count;
+            // Intermittent fault pulse duty cycle: bursts periodically then decays
+            float pulse_factor = 0.85f + 0.35f * sinf(2.0f * (float)M_PI * ((float)window_count / 6.0f));
             for (int i = 0; i < SAMPLES_PER_SEC; i++) {
                 float t = (float)i / (float)ADXL_ODR_HZ;
                 float shaft_1x = 0.055f * sinf(2.0f * (float)M_PI * 29.5f * (global_t + t));
-                float bpfo_harm = 0.038f * sinf(2.0f * (float)M_PI * 104.2f * (global_t + t));
+                // Defect harmonic scaled down by ~40% (0.023f), shaft remains dominant
+                float bpfo_harm = 0.023f * pulse_factor * sinf(2.0f * (float)M_PI * 104.2f * (global_t + t));
                 float noise = generate_gaussian_noise(0.0f, 0.035f);
                 activeBuf[i] = shaft_1x + bpfo_harm + noise;
                 delayMicroseconds(312);
