@@ -71,7 +71,7 @@ export const Stage3DecisionHighway: React.FC = () => {
   );
 
   return (
-    <div className="rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 space-y-2 shadow-2xl font-mono text-xs">
+    <div className="h-[260px] min-h-[260px] max-h-[260px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-2xl font-mono text-xs">
       {/* Panel Header */}
       <div className="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
         <span className="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -83,9 +83,9 @@ export const Stage3DecisionHighway: React.FC = () => {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch flex-1 overflow-hidden mt-1">
         {/* Giant Decision Annunciator Banner (Cols 1-8) - Strictly Pinned Height */}
-        <div className="lg:col-span-8 flex flex-col justify-center">
+        <div className="lg:col-span-8 flex flex-col justify-center overflow-hidden">
           {isCloud ? (
             <div className="h-[200px] min-h-[200px] max-h-[200px] p-5 rounded-xl border transition-all duration-300 flex flex-col justify-center bg-[#2B0E14] border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.35)] overflow-hidden">
               <div className="flex items-center gap-2.5">
@@ -138,7 +138,7 @@ export const Stage3DecisionHighway: React.FC = () => {
         </div>
 
         {/* Ultra-Crisp Semi-Circular Risk Dial (Cols 9-12) - Strictly Pinned Height */}
-        <div className="lg:col-span-4 rounded-xl border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between h-[200px] min-h-[200px] max-h-[200px] overflow-hidden">
+        <div className="lg:col-span-4 rounded-xl border border-[#1E293B] bg-[#101622] p-2 flex flex-col justify-between h-[200px] min-h-[200px] max-h-[200px] overflow-hidden">
           <div className="w-full flex items-center justify-between text-[10px] text-gray-400 px-1 shrink-0">
             <span className="font-bold flex items-center gap-1.5">
               <ShieldAlert className="w-3.5 h-3.5 text-cyan-400" />

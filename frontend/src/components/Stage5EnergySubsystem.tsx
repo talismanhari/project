@@ -51,7 +51,7 @@ export const Stage5EnergySubsystem: React.FC = () => {
   }, [telemetryData]);
 
   return (
-    <div className="h-[260px] min-h-[260px] max-h-[260px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl font-mono text-xs">
+    <div className="h-[280px] min-h-[280px] max-h-[280px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl font-mono text-xs">
       {/* Header with explicit INA219 instrumentation label */}
       <div className="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
         <div className="flex items-center gap-2">

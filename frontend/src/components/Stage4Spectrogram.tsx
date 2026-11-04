@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useAppSelector } from '../store';
 import { PlotlyChart } from './PlotlyChart';
 import Plotly from 'plotly.js-dist-min';
-import { Cloud, Zap, CheckCircle2, Activity } from 'lucide-react';
+import { Cloud, Zap, CheckCircle2 } from 'lucide-react';
 
 export const Stage4Spectrogram: React.FC = () => {
   const { telemetryData, riskThreshold } = useAppSelector((state) => state.telemetry);
@@ -96,7 +96,7 @@ export const Stage4Spectrogram: React.FC = () => {
   );
 
   return (
-    <div className="h-[260px] min-h-[260px] max-h-[260px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl font-mono text-xs">
+    <div className="h-[280px] min-h-[280px] max-h-[280px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl font-mono text-xs">
       <div className="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
         <div className="flex items-center gap-2">
           <Cloud className="w-3.5 h-3.5 text-purple-400" />
@@ -114,7 +114,7 @@ export const Stage4Spectrogram: React.FC = () => {
           </span>
         </div>
         <div className="text-[10px] text-gray-400">
-          PyTorch STFT (N=256, H=64) • Log-PSD dB
+          PyTorch STFT (N=256, H=64) • 0 - 1600 Hz Log-PSD dB
         </div>
       </div>
 
