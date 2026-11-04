@@ -21,41 +21,50 @@ export const Stage4Spectrogram: React.FC = () => {
   const specData = telemetryData?.spectrogram;
   const cloudVerdict = telemetryData?.cloud_verdict;
 
-  const plotData: Plotly.Data[] = useMemo(() => {
-    if (!specData || !specData.z || specData.z.length === 0) {
-      // Default baseline spectrogram grid (129 freqs x 13 times)
+  // Data Clamping on Fault Transition: Pre-sanitize incoming STFT matrix
+  const sanitizedPlotData: Plotly.Data[] = useMemo(() => {
+    const zSource = specData?.z;
+    let finalZ: number[][];
+
+    if (!zSource || !Array.isArray(zSource) || zSource.length === 0) {
+      // Pre-allocated fixed baseline grid (129 freqs x 13 times)
       const f = Array.from({ length: 129 }, (_, i) => i * 12.5);
       const t = Array.from({ length: 13 }, (_, i) => Number((i * 0.08).toFixed(2)));
-      const z = f.map((freq) =>
+      finalZ = f.map((freq) =>
         t.map((time) => {
           const fund = Math.exp(-Math.pow((freq - 29.5) / 15, 2)) * 30;
           const bpfo = Math.exp(-Math.pow((freq - 104.2) / 12, 2)) * (isCloud ? 45 : 5);
-          return Number((-60 + fund + bpfo + Math.random() * 3).toFixed(1));
+          return Number((-60 + fund + bpfo).toFixed(1));
         })
       );
-      return [
-        {
-          z,
-          x: t,
-          y: f,
-          type: 'heatmap',
-          colorscale: 'Viridis',
-          zsmooth: 'best',
-          colorbar: {
-            title: { text: 'PSD [dB]', font: { family: 'JetBrains Mono, monospace', size: 8, color: '#9CA3AF' } },
-            tickfont: { family: 'JetBrains Mono, monospace', size: 7, color: '#9CA3AF' },
-            len: 0.95,
-            thickness: 10,
-          },
-        },
-      ];
+    } else {
+      // Sanitize incoming STFT matrix: replace NaN, null, undefined, infinite with 0.0
+      finalZ = zSource.map((row) => {
+        if (!Array.isArray(row)) return new Array(13).fill(0.0);
+        return row.map((val) => {
+          if (val === null || val === undefined || isNaN(val) || !isFinite(val)) {
+            return 0.0;
+          }
+          return Number(val);
+        });
+      });
     }
+
+    const times =
+      specData?.times && Array.isArray(specData.times) && specData.times.length > 0
+        ? specData.times.map((t) => (t === null || isNaN(t) || !isFinite(t) ? 0.0 : Number(t)))
+        : Array.from({ length: (finalZ[0] || []).length || 13 }, (_, i) => Number((i * 0.08).toFixed(2)));
+
+    const freqs =
+      specData?.freqs && Array.isArray(specData.freqs) && specData.freqs.length > 0
+        ? specData.freqs.map((f) => (f === null || isNaN(f) || !isFinite(f) ? 0.0 : Number(f)))
+        : Array.from({ length: finalZ.length || 129 }, (_, i) => Number((i * 12.5).toFixed(1)));
 
     return [
       {
-        z: specData.z,
-        x: specData.times,
-        y: specData.freqs,
+        z: finalZ,
+        x: times,
+        y: freqs,
         type: 'heatmap',
         colorscale: 'Viridis',
         zsmooth: 'best',
@@ -72,31 +81,16 @@ export const Stage4Spectrogram: React.FC = () => {
     ];
   }, [specData, isCloud]);
 
-  const plotLayout: Partial<Plotly.Layout> = useMemo(
-    () => ({
-      uirevision: 'constant',
-      autosize: true,
-      paper_bgcolor: '#101622',
-      plot_bgcolor: '#101622',
-      font: { family: 'JetBrains Mono, monospace', color: '#9CA3AF', size: 9 },
-      xaxis: {
-        title: { text: 'Time [s]', font: { size: 9 } },
-        showgrid: true,
-        gridcolor: '#1E293B',
-      },
-      yaxis: {
-        title: { text: 'Freq [Hz]', font: { size: 9 } },
-        range: [0, 1600],
-        showgrid: true,
-        gridcolor: '#1E293B',
-      },
-      margin: { l: 40, r: 10, t: 10, b: 24 },
-    }),
-    []
-  );
-
   return (
-    <div className="h-[280px] min-h-[280px] max-h-[280px] rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl font-mono text-xs">
+    <div
+      className="rounded-2xl border border-[#1E293B] bg-[#0B0F19] p-3 flex flex-col justify-between overflow-hidden shadow-xl font-mono text-xs"
+      style={{
+        height: '340px',
+        minHeight: '340px',
+        maxHeight: '340px',
+        contain: 'paint layout size',
+      }}
+    >
       <div className="flex items-center justify-between border-b border-[#1E293B] pb-1.5 shrink-0">
         <div className="flex items-center gap-2">
           <Cloud className="w-3.5 h-3.5 text-purple-400" />
@@ -106,7 +100,7 @@ export const Stage4Spectrogram: React.FC = () => {
           <span
             className={`px-2 py-0.2 rounded-full text-[9px] font-bold border ${
               isCloud
-                ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse'
+                ? 'bg-red-500/20 text-red-400 border-red-500/40'
                 : 'bg-gray-800 text-gray-400 border-[#1E293B]'
             }`}
           >
@@ -119,29 +113,69 @@ export const Stage4Spectrogram: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch flex-1 overflow-hidden mt-1">
-        {/* Heatmap Area (Cols 1-8) */}
+        {/* Pre-allocated Spectrogram Canvas Container */}
         <div className="lg:col-span-8 rounded-lg overflow-hidden border border-[#1E293B]">
-          <PlotlyChart data={plotData} layout={plotLayout} />
+          <div
+            style={{
+              width: '100%',
+              height: '280px',
+              minHeight: '280px',
+              maxHeight: '280px',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <PlotlyChart
+              data={sanitizedPlotData}
+              layout={{
+                autosize: false,
+                height: 280,
+                margin: { l: 40, r: 20, t: 30, b: 35 },
+                uirevision: 'static-key',
+                paper_bgcolor: '#101622',
+                plot_bgcolor: '#101622',
+                font: { family: 'JetBrains Mono, monospace', color: '#9CA3AF', size: 9 },
+                xaxis: {
+                  title: { text: 'Time [s]', font: { size: 9 } },
+                  showgrid: true,
+                  gridcolor: '#1E293B',
+                },
+                yaxis: {
+                  title: { text: 'Freq [Hz]', font: { size: 9 } },
+                  range: [0, 1600],
+                  showgrid: true,
+                  gridcolor: '#1E293B',
+                },
+              }}
+              config={{
+                responsive: false, // Prevent dynamic resize thrashing on data bursts
+                displayModeBar: false,
+              }}
+            />
+          </div>
         </div>
 
         {/* Validation Verdict & Latency Box (Cols 9-12) */}
-        <div className="lg:col-span-4 rounded-lg border border-[#1E293B] bg-[#101622] p-2.5 flex flex-col justify-between overflow-hidden">
+        <div
+          className="lg:col-span-4 rounded-lg border border-[#1E293B] bg-[#101622] p-3 flex flex-col justify-between"
+          style={{ height: '280px', minHeight: '280px', maxHeight: '280px', overflow: 'hidden' }}
+        >
           <div>
-            <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1 border-b border-[#1E293B] pb-1">
-              <Zap className="w-3 h-3 text-amber-400" />
+            <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1 border-b border-[#1E293B] pb-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
               RTX 3050 Validation Engine
             </div>
-            <div className="text-sm font-bold text-white font-sans mt-1.5">
+            <div className="text-sm font-bold text-white font-sans mt-2">
               {cloudVerdict?.confirmed_fault || telemetryData?.decision?.predicted_class || 'Outer Race (BPFO)'}
             </div>
-            <div className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+            <div className="text-[10px] text-gray-400 mt-1.5 leading-relaxed">
               {isCloud
                 ? 'High-energy harmonic peaks detected at 104.2 Hz defect series with 99.8% model confidence on GPU.'
                 : 'Edge model 100% confident. GPU idle in low-power standby awaiting deferred packets.'}
             </div>
           </div>
 
-          <div className="p-2 rounded bg-[#07090C] border border-[#1E293B] text-[10px] space-y-1">
+          <div className="p-2.5 rounded bg-[#07090C] border border-[#1E293B] text-[10px] space-y-1.5">
             <div className="flex justify-between text-gray-400">
               <span>Compute Latency:</span>
               <strong className="text-cyan-300 font-mono">{cloudVerdict?.latency_ms || 1.82} ms</strong>

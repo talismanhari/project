@@ -39,8 +39,8 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
       if (!containerRef.current) return;
 
       const baseLayout: Partial<Plotly.Layout> = {
-        uirevision: 'constant',
-        autosize: true,
+        uirevision: 'static-key',
+        autosize: false,
         paper_bgcolor: '#0B0F19',
         plot_bgcolor: '#101622',
         font: {
@@ -48,7 +48,7 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
           color: '#9CA3AF',
           size: 9,
         },
-        margin: { l: 45, r: 15, t: 25, b: 25 },
+        margin: { l: 40, r: 20, t: 25, b: 25 },
         showlegend: false,
         xaxis: {
           showgrid: true,
@@ -72,7 +72,7 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
       };
 
       const baseConfig: Partial<Plotly.Config> = {
-        responsive: true,
+        responsive: false, // Prevent dynamic resize thrashing on data bursts
         displayModeBar: false,
         displaylogo: false,
         staticPlot: false,
@@ -91,17 +91,12 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
 
   useEffect(() => {
     const el = containerRef.current;
-    const handleResize = () => {
-      if (el) Plotly.Plots.resize(el);
-    };
-    window.addEventListener('resize', handleResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
       if (el) {
         try {
           Plotly.purge(el);
         } catch {
-          // ignore
+          // ignore purge errors
         }
       }
     };
