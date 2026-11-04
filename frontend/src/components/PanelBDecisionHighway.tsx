@@ -19,7 +19,7 @@ export const PanelBDecisionHighway: React.FC = () => {
 
   const isDeferred = useMemo(() => {
     return (
-      risk > 1.65 ||
+      risk > 1.70 ||
       telemetryData?.decision?.action === 'DEFER_TO_CLOUD' ||
       telemetryData?.decision?.action === 'CLOUD' ||
       telemetryData?.cost_table?.verdict === 'DEFERRED_TO_RTX3050'
@@ -48,7 +48,7 @@ export const PanelBDecisionHighway: React.FC = () => {
           PANEL B: DECISION HIGHWAY (BAYES ASYMMETRIC RISK GATE)
         </span>
         <span className="text-[10px] text-gray-400">
-          Boundary: <strong className="text-amber-400">θ = 1.65</strong> • Temp: <strong className="text-cyan-400">T = 1.45</strong>
+          Boundary: <strong className="text-amber-400">θ = 1.70</strong> • Temp: <strong className="text-cyan-400">T = 1.45</strong>
         </span>
       </div>
 
@@ -123,15 +123,15 @@ export const PanelBDecisionHighway: React.FC = () => {
                 }}
               >
                 {isDeferred
-                  ? `Risk: ${risk.toFixed(3)} exceeds θ = 1.65 boundary • Payload deferred to CUDA for STFT validation`
+                  ? `Risk: ${risk.toFixed(3)} exceeds θ = 1.70 boundary • Payload deferred to CUDA for STFT validation`
                   : isFailsafe
                   ? `Risk: ${risk.toFixed(3)} | Wi-Fi dropped | Fallback prevents flatline • 0.50 mJ energy enforced`
-                  : `Risk: ${risk.toFixed(3)} below θ = 1.65 threshold • Local model confident • Zero cloud latency`}
+                  : `Risk: ${risk.toFixed(3)} below θ = 1.70 threshold • Local model confident • Zero cloud latency`}
               </div>
 
               <div className="flex items-center gap-4 text-[10px] text-gray-400 font-mono mt-3 pt-2 border-t border-[#1E293B]/60">
                 <span>
-                  Gate: <strong className="text-white font-sans">θ = 1.65</strong>
+                  Gate: <strong className="text-white font-sans">θ = 1.70</strong>
                 </span>
                 <span>
                   Latency:{' '}
@@ -170,30 +170,33 @@ export const PanelBDecisionHighway: React.FC = () => {
           >
             <div className="w-full flex items-center justify-between text-[10px] text-gray-400 shrink-0">
               <span className="font-bold uppercase tracking-wider text-white">Bayes Risk Dial R(x)</span>
-              <span className="text-[9px] text-amber-400 font-mono font-bold">θ = 1.65</span>
+              <span className="text-[9px] text-amber-400 font-mono font-bold">θ = 1.70</span>
             </div>
 
             <div className="flex-1 w-full flex items-center justify-center relative">
               <svg viewBox="0 0 200 115" className="w-full max-h-[110px] overflow-visible">
+                {/* Safe Arc (0.0 to 1.70 -> angle -90 to +12 deg) */}
                 <path
-                  d="M 30 100 A 70 70 0 0 1 111.0 30.9"
+                  d="M 30 100 A 70 70 0 0 1 114.6 31.5"
                   fill="none"
                   stroke="#10b981"
                   strokeWidth="12"
                   strokeLinecap="round"
                   opacity="0.85"
                 />
+                {/* Deferral Arc (1.70 to 3.0 -> angle +12 to +90 deg) */}
                 <path
-                  d="M 111.0 30.9 A 70 70 0 0 1 170 100"
+                  d="M 114.6 31.5 A 70 70 0 0 1 170 100"
                   fill="none"
                   stroke="#ef4444"
                   strokeWidth="12"
                   strokeLinecap="round"
                   opacity="0.85"
                 />
-                <line x1="111.9" y1="24.9" x2="109.4" y2="40.7" stroke="#f59e0b" strokeWidth="3" />
-                <text x="102" y="20" fill="#f59e0b" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                  θ=1.65
+                {/* Threshold Marker Tick at +12 deg */}
+                <line x1="115.6" y1="26.6" x2="112.5" y2="41.3" stroke="#f59e0b" strokeWidth="3" />
+                <text x="106" y="20" fill="#f59e0b" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                  θ=1.70
                 </text>
                 <text x="22" y="112" fill="#64748B" fontSize="8" fontFamily="JetBrains Mono">
                   0.0
@@ -224,7 +227,7 @@ export const PanelBDecisionHighway: React.FC = () => {
               >
                 {risk.toFixed(3)}
               </span>
-              <span className="text-[9px] text-gray-500">Safe: [0 - 1.65]</span>
+              <span className="text-[9px] text-gray-500">Safe: [0 - 1.70]</span>
             </div>
           </div>
         </div>

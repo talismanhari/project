@@ -113,7 +113,7 @@ export function computeExpectedRiskVector(
  */
 export function evaluateDeferralDecision(
   minRisk: number,
-  threshold: number = 1.65
+  threshold: number = 1.70
 ): {
   decision: 'KEEP_LOCAL' | 'OFFLOAD_CLOUD';
   margin: number;

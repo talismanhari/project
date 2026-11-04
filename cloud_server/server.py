@@ -26,7 +26,12 @@ PORT = int(os.getenv("PORT", "8000"))
 COM_PORT = os.getenv("ESP32_COM_PORT", "COM7")
 BAUD_RATE = int(os.getenv("ESP32_BAUD_RATE", "115200"))
 FORCE_DEVICE = os.getenv("DEVICE", "auto")
-RISK_THRESHOLD = float(os.getenv("RISK_THRESHOLD", "1.65"))
+RISK_THRESHOLD = float(os.getenv("RISK_THRESHOLD", "1.70"))
+
+# Hysteresis state for Schmitt trigger deferral gate
+_ema_risk = 0.355
+_deferred_state = False
+_consec_fault_count = 0
 
 if TORCH_AVAILABLE and torch is not None:
     if FORCE_DEVICE == "cpu":
@@ -257,6 +262,7 @@ class SimRequest(BaseModel):
     outage_failsafe: Optional[bool] = False
 
 def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outage: bool = False):
+    global _ema_risk, _deferred_state, _consec_fault_count
     is_severe = (mode == "MODE_2_SEVERE")
     N = 1024
     t = np.linspace(0.0, 1.0, N, endpoint=False)
@@ -273,6 +279,12 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         weighted_risks = [round(float(p * c), 4) for p, c in zip(probs, costs)]
         total_risk = round(float(sum(weighted_risks)), 3)
 
+        _ema_risk = 0.75 * _ema_risk + 0.25 * total_risk
+        if _ema_risk < 1.15:
+            _consec_fault_count = 0
+            _deferred_state = False
+        total_risk = round(_ema_risk, 3)
+
         action = "EDGE"
         predicted_class = "Healthy"
         confidence = 94.2
@@ -281,10 +293,10 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         float_vals = [0.065, 2.40, 2.80, 0.05, 0.42, 0.04, 0.03, 0.85, 220.0, 0.08, 2.10, 0.50]
         int8_vals = [8, 12, 18, 2, 14, 3, 2, 24, 18, 4, 32, 2]
     else:
-        # Duty cycle / transient fault pulse (6-window periodic cycle: ~3s burst then decay)
-        pulse_phase = float(np.sin(2.0 * np.pi * (window_idx / 6.0)))
-        # Soften defect harmonic amplitude (BPFO / 104 Hz component) down by 40% (multiplier ~1.15x - 1.30x)
-        bpfo_amp_scale = 1.15 + 0.20 * pulse_phase
+        # Duty cycle / transient fault pulse (16-window periodic cycle: ~8s burst then decay)
+        pulse_phase = float(np.sin(2.0 * np.pi * (window_idx / 16.0)))
+        # Soften defect harmonic amplitude (BPFO / 104 Hz component) — reduced to ~1.15x-1.25x baseline
+        bpfo_amp_scale = 1.15 + 0.10 * pulse_phase
 
         # Shaft baseline vibration (4.5 m/s^2) remains dominant over defect harmonics
         ax = 4.5 * np.sin(2 * np.pi * 29.5 * t) + (4.5 * 0.32 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.35 * np.random.randn(N)
@@ -292,10 +304,9 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         az = 9.81 + (2.0 * bpfo_amp_scale) * np.sin(2 * np.pi * 104.2 * t) + 0.45 * np.random.randn(N)
         acoustic = 0.15 * bpfo_amp_scale * np.sin(2 * np.pi * 104.2 * t) + 0.03 * np.random.randn(N)
 
-        # In Fault mode, risk meter hovers dynamically around 1.30–1.75
-        # causing Decision Highway to toggle dynamically between EDGE and CLOUD
-        target_risk = round(float(1.52 + 0.22 * pulse_phase + np.random.uniform(-0.02, 0.02)), 3)
-        total_risk = max(1.30, min(1.75, target_risk))
+        # In Fault mode, raw risk metric oscillates with anomaly bursts
+        target_risk = round(float(1.48 + 0.58 * pulse_phase + np.random.uniform(-0.02, 0.02)), 3)
+        total_risk = max(0.85, min(2.10, target_risk))
 
         p_fault = round(max(0.42, min(0.66, 0.54 + 0.10 * pulse_phase)), 3)
         p_healthy = round(max(0.10, 1.0 - p_fault - 0.22), 3)
@@ -309,7 +320,20 @@ def build_stream_payload(mode: str = "MODE_1_NORMAL", window_idx: int = 1, outag
         predicted_class = "Outer Race (BPFO)"
         confidence = round(p_fault * 100.0, 1)
 
-        defer = (total_risk > RISK_THRESHOLD) and not outage
+        # --- Hysteresis Schmitt Trigger with EMA smoothing ---
+        _ema_risk = 0.75 * _ema_risk + 0.25 * total_risk
+        if _ema_risk > 1.70:
+            _consec_fault_count += 1
+            if _consec_fault_count >= 3 and not outage:
+                _deferred_state = True
+        elif _ema_risk < 1.15:
+            _consec_fault_count = 0
+            _deferred_state = False
+        # In deadband [1.15, 1.70]: hold _deferred_state unchanged
+
+        total_risk = round(_ema_risk, 3)
+        defer = _deferred_state and not outage
+
         if outage:
             action = "EDGE_FAILSAFE"
             verdict = "PROCESSED_ON_EDGE"

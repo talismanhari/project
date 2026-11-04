@@ -226,7 +226,7 @@ def train_and_export():
 
 // Calibration & Bayes Risk Threshold Parameters
 static const float calibration_temperature = {cal_temperature:.2f}f;
-static const float DEFERRAL_THRESHOLD = 1.65f;
+static const float DEFERRAL_THRESHOLD = 1.70f;
 
 // Normalization Vectors
 static const float feature_means[NUM_DSP_FEATURES] = {{
