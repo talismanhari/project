@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build && node -e \"const fs=require('fs'),path=require('path');const s=path.resolve('../cloud_server/static/dist');if(!fs.existsSync(s)){fs.mkdirSync(s,{recursive:true});}fs.cpSync('dist',s,{recursive:true});\"",
+    "build:tsc": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {

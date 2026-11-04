@@ -11,7 +11,7 @@ export interface Int8Features {
 }
 
 export interface DecisionPayload {
-  action: 'EDGE' | 'CLOUD' | 'EDGE_FAILSAFE';
+  action: 'EDGE' | 'CLOUD' | 'EDGE_FAILSAFE' | 'DEFER_TO_CLOUD' | string;
   risk_score: number;
   threshold: number;
   predicted_class: string;
@@ -101,6 +101,7 @@ export interface TelemetryPayload {
   };
   acquisition?: AcquisitionPayload;
   cost_table?: CostTablePayload;
+  cost_breakdown?: { calculated_risk?: number; [key: string]: any };
   energy_status?: EnergyStatusPayload;
   decision?: DecisionPayload;
   cloud_verdict?: CloudVerdict;

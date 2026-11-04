@@ -424,6 +424,13 @@ def get_dashboard():
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+DIST_DIR = os.path.join(STATIC_DIR, "dist")
+if os.path.exists(DIST_DIR):
+    app.mount("/dist", StaticFiles(directory=DIST_DIR, html=True), name="dist")
+    assets_dir = os.path.join(DIST_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=HOST, port=PORT)
